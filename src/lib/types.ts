@@ -42,6 +42,7 @@ export type Product = {
   barcode: string;
   capture: "barcode" | "ocr";
   source: string;
+  image: string;
   ingredients: Ingredient[];
 };
 

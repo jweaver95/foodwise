@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Barcode, ImageSquare, X } from "@phosphor-icons/react/dist/ssr";
+import { ProductPhoto } from "@/components/ProductPhoto";
 import { Button, Screen } from "@/components/ui";
 import { useHousehold } from "@/context/HouseholdContext";
 import { PRODUCTS, SAMPLE_SCAN_ORDER } from "@/lib/data";
@@ -29,8 +30,7 @@ export default function ScanPage() {
   return (
     <Screen tone="dark">
       <div className="relative flex flex-1 flex-col">
-        {/* Viewfinder stand-in. A real build opens the camera here. */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_40%,#1b241e_0%,#0d120f_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_35%,#243028_0%,#0d120f_72%)]" />
 
         <div className="relative flex flex-1 flex-col">
           <header className="flex shrink-0 items-center justify-between px-5 pt-5">
@@ -38,30 +38,30 @@ export default function ScanPage() {
               type="button"
               onClick={() => router.push("/home")}
               aria-label="Close scanner"
-              className="-ml-2 flex size-11 items-center justify-center rounded-full text-white active:scale-95"
+              className="-ml-2 flex size-11 items-center justify-center rounded-full bg-white/8 text-white active:scale-95"
             >
               <X size={24} weight="bold" />
             </button>
-            <p className="rounded-full bg-white/15 px-4 py-2 text-[13px] font-medium text-white">
+            <p className="rounded-full bg-white/12 px-4 py-2 text-[13px] font-medium text-white">
               Scanning for {selectedMember?.name ?? "your household"}
             </p>
           </header>
 
           <div className="flex flex-1 flex-col items-center justify-center px-6">
-            <div className="relative size-[220px]">
+            <div className="relative size-[228px]">
               {[
-                "left-0 top-0 border-l-2 border-t-2 rounded-tl-[14px]",
-                "right-0 top-0 border-r-2 border-t-2 rounded-tr-[14px]",
-                "left-0 bottom-0 border-l-2 border-b-2 rounded-bl-[14px]",
-                "right-0 bottom-0 border-r-2 border-b-2 rounded-br-[14px]",
+                "left-0 top-0 border-l-2 border-t-2 rounded-tl-[16px]",
+                "right-0 top-0 border-r-2 border-t-2 rounded-tr-[16px]",
+                "left-0 bottom-0 border-l-2 border-b-2 rounded-bl-[16px]",
+                "right-0 bottom-0 border-r-2 border-b-2 rounded-br-[16px]",
               ].map((corner) => (
                 <span
                   key={corner}
-                  className={`absolute size-12 border-white/80 ${corner}`}
+                  className={`absolute size-14 border-white/85 ${corner}`}
                 />
               ))}
               {capturing ? null : (
-                <span className="scanline absolute left-6 right-6 top-1/2 h-px bg-white/70" />
+                <span className="scanline absolute left-8 right-8 top-1/2 h-px bg-white/70" />
               )}
               {capturing ? (
                 <span className="absolute inset-0 flex items-center justify-center text-[15px] font-medium text-white">
@@ -70,15 +70,15 @@ export default function ScanPage() {
               ) : null}
             </div>
 
-            <p className="mt-10 text-center text-[17px] font-medium text-white/90">
+            <p className="mt-10 text-center text-[20px] font-semibold tracking-[-0.02em] text-white">
               {mode === "barcode"
-                ? "Point at the barcode"
-                : "Fill the frame with the ingredient panel"}
+                ? "Hold over the barcode"
+                : "Fill the frame with the panel"}
             </p>
-            <p className="mt-2 max-w-[30ch] text-center text-[13px] leading-relaxed text-white/55">
+            <p className="mt-2 max-w-[28ch] text-center text-[13px] leading-relaxed text-white/55">
               {mode === "barcode"
-                ? "No barcode match? Switch to a photo of the panel."
-                : "Low-confidence reads ask for a retake instead of guessing."}
+                ? "No match? Switch to a photo of the ingredient list."
+                : "A low-confidence read asks for a retake instead of guessing."}
             </p>
           </div>
 
@@ -87,7 +87,7 @@ export default function ScanPage() {
               {(
                 [
                   { id: "barcode" as Mode, label: "Barcode", Icon: Barcode },
-                  { id: "ocr" as Mode, label: "Ingredient photo", Icon: ImageSquare },
+                  { id: "ocr" as Mode, label: "Panel photo", Icon: ImageSquare },
                 ]
               ).map(({ id, label, Icon }) => (
                 <button
@@ -106,32 +106,33 @@ export default function ScanPage() {
             </div>
 
             {picking ? (
-              <div className="space-y-2">
-                <p className="px-1 pb-1 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/55">
-                  Pick a sample product
+              <div className="max-h-[280px] space-y-2 overflow-y-auto">
+                <p className="px-1 pb-1 text-[13px] font-medium text-white/55">
+                  Pick a sample from the aisle
                 </p>
                 {SAMPLES.map((product) => (
                   <button
                     key={product.id}
                     type="button"
                     onClick={() => setCapturing(product.id)}
-                    className="flex w-full items-center justify-between gap-3 rounded-surface bg-white/10 px-4 py-3 text-left active:scale-[0.99]"
+                    className="flex w-full items-center gap-3 rounded-[20px] bg-white/10 p-2 pr-4 text-left active:scale-[0.99]"
                   >
+                    <ProductPhoto
+                      src={product.image}
+                      alt=""
+                      className="size-14 shrink-0 rounded-[14px]"
+                      sizes="56px"
+                    />
                     <span className="min-w-0">
                       <span className="block truncate text-[15px] font-semibold text-white">
                         {product.name}
                       </span>
                       <span className="mt-0.5 block text-[12px] text-white/55">
                         {product.capture === "ocr"
-                          ? "No barcode match, panel photo"
-                          : product.barcode}
+                          ? "No barcode match"
+                          : product.brand}
                       </span>
                     </span>
-                    {product.capture === "ocr" ? (
-                      <ImageSquare size={18} className="shrink-0 text-white/70" />
-                    ) : (
-                      <Barcode size={18} className="shrink-0 text-white/70" />
-                    )}
                   </button>
                 ))}
                 <button

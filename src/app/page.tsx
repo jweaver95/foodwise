@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Button, Disclaimer, Screen } from "@/components/ui";
@@ -15,44 +16,32 @@ export default function WelcomePage() {
 
   return (
     <Screen>
-      <div className="flex flex-1 flex-col justify-between px-6 pb-6 pt-16">
-        <div>
-          <p className="label-eyebrow">FoodWise</p>
-          <h1 className="mt-6 max-w-[16ch] text-[40px] font-bold leading-[1.05] tracking-[-0.03em]">
-            Know before it goes in the cart.
-          </h1>
-          <p className="mt-5 max-w-[34ch] text-[17px] leading-relaxed text-ink-muted">
-            Scan a product and see whether it is safe for the person you are
-            shopping for. Not a score. A verdict.
+      <div className="relative flex flex-1 flex-col">
+        <div className="relative min-h-[52%] flex-1 overflow-hidden">
+          <Image
+            src="/photos/welcome.png"
+            alt="A grocery cart in a store aisle, waiting on a decision"
+            fill
+            priority
+            sizes="430px"
+            className="object-cover object-[center_35%]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-forest-deep/35 via-forest-deep/10 to-paper" />
+          <p className="absolute left-6 top-8 text-[13px] font-semibold tracking-[0.18em] text-white uppercase">
+            FoodWise
           </p>
         </div>
 
-        <div className="space-y-6">
-          <dl className="divide-y divide-line border-t border-line">
-            {[
-              {
-                term: "The panel, translated",
-                detail: "Casein, whey, tocopherols, mapped to what they actually are.",
-              },
-              {
-                term: "One profile per person",
-                detail: "Leo's peanut allergy and Maya's milk allergy are separate answers.",
-              },
-              {
-                term: "The database decides",
-                detail: "A rules engine computes the verdict. AI only explains it.",
-              },
-            ].map((item) => (
-              <div key={item.term} className="py-4">
-                <dt className="text-[15px] font-semibold">{item.term}</dt>
-                <dd className="mt-1 text-[14px] leading-relaxed text-ink-muted">
-                  {item.detail}
-                </dd>
-              </div>
-            ))}
-          </dl>
+        <div className="relative z-10 -mt-24 bg-gradient-to-t from-paper via-paper to-transparent px-6 pb-6 pt-16">
+          <h1 className="max-w-[13ch] text-[38px] font-bold leading-[1.04] tracking-[-0.035em] text-wrap-balance">
+            Know before it goes in the cart.
+          </h1>
+          <p className="mt-4 max-w-[32ch] text-[16px] leading-relaxed text-ink-muted">
+            A verdict for the person you are shopping for. Not a cleanliness
+            score. Not a guess.
+          </p>
 
-          <div className="space-y-3">
+          <div className="mt-7 space-y-3">
             <Button onClick={() => router.push("/onboarding")}>
               Set up your household
             </Button>
@@ -63,11 +52,10 @@ export default function WelcomePage() {
                 router.push("/home");
               }}
             >
-              Use the demo household
+              Walk through as Priya
             </Button>
+            <Disclaimer />
           </div>
-
-          <Disclaimer />
         </div>
       </div>
     </Screen>

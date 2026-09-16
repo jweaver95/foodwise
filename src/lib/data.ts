@@ -29,6 +29,7 @@ export const PRODUCTS: Product[] = [
     barcode: "8 50026 01234 5",
     capture: "barcode",
     source: "Open Food Facts",
+    image: "/photos/granola.png",
     ingredients: [
       { id: "oats", label: "Rolled oats" },
       { id: "maple", label: "Maple syrup" },
@@ -55,6 +56,7 @@ export const PRODUCTS: Product[] = [
     barcode: "7 25272 73051 9",
     capture: "barcode",
     source: "Open Food Facts",
+    image: "/photos/oat-thins.png",
     ingredients: [
       { id: "oats-whole", label: "Whole grain oats" },
       { id: "oleic", label: "High-oleic sunflower oil" },
@@ -74,6 +76,7 @@ export const PRODUCTS: Product[] = [
     barcode: "0 41196 91022 7",
     capture: "barcode",
     source: "Open Food Facts",
+    image: "/photos/bisque.png",
     ingredients: [
       { id: "tomato", label: "Vine tomatoes" },
       { id: "stock", label: "Vegetable stock" },
@@ -94,6 +97,7 @@ export const PRODUCTS: Product[] = [
     barcode: "4 90218 44073 1",
     capture: "barcode",
     source: "Open Food Facts",
+    image: "/photos/dressing.png",
     ingredients: [
       { id: "rice-vinegar", label: "Rice vinegar" },
       {
@@ -124,6 +128,7 @@ export const PRODUCTS: Product[] = [
     barcode: "No barcode match",
     capture: "ocr",
     source: "Photo of ingredient panel",
+    image: "/photos/chili.png",
     ingredients: [
       { id: "chili", label: "Chili pepper" },
       { id: "rapeseed", label: "Rapeseed oil" },

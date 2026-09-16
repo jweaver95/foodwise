@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Plus, Trash } from "@phosphor-icons/react/dist/ssr";
+import { Avatar } from "@/components/Avatar";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import {
   Button,
@@ -38,7 +38,6 @@ const blankDraft: Draft = {
 };
 
 export default function HouseholdPage() {
-  const router = useRouter();
   const { members } = useHousehold();
   const [draft, setDraft] = useState<Draft | null>(null);
 
@@ -126,39 +125,45 @@ export default function HouseholdPage() {
 
   return (
     <Screen>
-      <ScreenHeader back />
-      <ScreenBody>
-        <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">
-          Your household
+      <div className="px-5 pb-2 pt-8">
+        <h1 className="text-[30px] font-bold leading-tight tracking-[-0.03em]">
+          Your people
         </h1>
-        <p className="mt-2 max-w-[38ch] text-[15px] leading-relaxed text-ink-muted">
+        <p className="mt-2 max-w-[36ch] text-[15px] leading-relaxed text-ink-muted">
           Each person gets their own profile, so the same product can be safe for
           one of them and not the other.
         </p>
-
-        <ul className="mt-7 divide-y divide-line border-y border-line">
+      </div>
+      <ScreenBody>
+        <ul className="space-y-3">
           {members.map((member) => (
-            <li key={member.id} className="flex items-center gap-3 py-4">
+            <li
+              key={member.id}
+              className="flex items-center gap-3 rounded-[22px] bg-surface p-3 pr-2 shadow-[var(--shadow-card)] ring-1 ring-ink/6"
+            >
               <button
                 type="button"
                 onClick={() => startEdit(member)}
-                className="min-w-0 flex-1 text-left"
+                className="flex min-w-0 flex-1 items-center gap-3 text-left"
               >
-                <span className="block text-[17px] font-semibold">
-                  {member.name}
-                </span>
-                <span className="mt-0.5 block text-[13px] text-ink-muted">
-                  {member.relation}
-                </span>
-                <span className="mt-1.5 block text-[13px] leading-relaxed text-ink-muted">
-                  {summarizeProfile(member.allergens, member.protocols)}
+                <Avatar member={member} />
+                <span className="min-w-0">
+                  <span className="block text-[17px] font-semibold">
+                    {member.name}
+                  </span>
+                  <span className="mt-0.5 block text-[13px] text-ink-muted">
+                    {member.relation}
+                  </span>
+                  <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">
+                    {summarizeProfile(member.allergens, member.protocols)}
+                  </span>
                 </span>
               </button>
               <button
                 type="button"
                 onClick={() => removeMember(member.id)}
                 aria-label={`Remove ${member.name}`}
-                className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line text-ink-muted"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-muted"
               >
                 <Trash size={18} />
               </button>
@@ -169,10 +174,10 @@ export default function HouseholdPage() {
         <button
           type="button"
           onClick={() => setDraft(blankDraft)}
-          className="mt-5 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-full border border-dashed border-line text-[15px] font-semibold active:scale-[0.99]"
+          className="mt-5 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-surface text-[15px] font-semibold shadow-[var(--shadow-card)] ring-1 ring-ink/6 active:scale-[0.99]"
         >
           <Plus size={18} weight="bold" />
-          Add a member
+          Add a person
         </button>
 
         <p className="mt-6 text-[13px] leading-relaxed text-ink-muted">
@@ -182,12 +187,6 @@ export default function HouseholdPage() {
 
         <Disclaimer className="mt-6" />
       </ScreenBody>
-
-      {members.length > 0 ? (
-        <ScreenFooter>
-          <Button onClick={() => router.push("/home")}>Done</Button>
-        </ScreenFooter>
-      ) : null}
     </Screen>
   );
 }

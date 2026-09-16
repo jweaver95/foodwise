@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { ReportErrorSheet } from "@/components/ReportErrorSheet";
+import { Avatar } from "@/components/Avatar";
+import { ProductPhoto } from "@/components/ProductPhoto";
 import {
   Badge,
   ButtonLink,
   Disclaimer,
   Screen,
   ScreenBody,
-  SectionLabel,
   StatusPill,
   statusSurface,
 } from "@/components/ui";
@@ -78,37 +79,53 @@ export function VerdictView({ product }: { product: Product }) {
       />
 
       <ScreenBody>
-        <section
-          className={`rounded-surface px-5 py-7 ${statusSurface[verdict.status]}`}
-        >
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
-            {kicker}
-          </p>
-          <h1 className="mt-3 text-[36px] font-bold leading-[1.05] tracking-[-0.03em]">
-            {title}
-          </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-white/85">
-            {detail}
-          </p>
-        </section>
+        <div className="bezel">
+          <div className={`bezel-inner ${statusSurface[verdict.status]}`}>
+            <div className="relative h-[168px]">
+              <ProductPhoto
+                src={product.image}
+                alt=""
+                className="h-full w-full"
+                sizes="400px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+            </div>
+            <div className="px-5 pb-6 pt-5">
+              <p className="text-[12px] font-semibold tracking-[0.12em] text-white/80 uppercase">
+                {kicker}
+              </p>
+              <h1 className="mt-2 text-[34px] font-bold leading-[1.05] tracking-[-0.03em] text-wrap-balance">
+                {title}
+              </h1>
+              <p className="mt-3 max-w-[36ch] text-[15px] leading-relaxed text-white/88">
+                {detail}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <div className="mt-6">
-          <h2 className="text-[22px] font-bold tracking-[-0.02em]">
-            {product.name}
-          </h2>
-          <p className="mt-1 font-mono text-[13px] text-ink-muted">
-            {product.brand} · {product.barcode}
-          </p>
+        <div className="mt-6 flex items-center gap-3">
+          <Avatar member={selectedMember} />
+          <div>
+            <h2 className="text-[20px] font-bold tracking-[-0.02em]">
+              {product.name}
+            </h2>
+            <p className="font-mono text-[12px] text-ink-muted">
+              {product.brand} · {product.barcode}
+            </p>
+          </div>
         </div>
 
         {verdict.hits.length > 0 ? (
           <section className="mt-7">
-            <SectionLabel>What triggered this</SectionLabel>
+            <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
+              What triggered this
+            </p>
             <div className="space-y-2">
               {verdict.hits.map((hit) => (
                 <div
                   key={hit.ingredient.id}
-                  className="rounded-surface border border-line bg-surface p-4"
+                  className="rounded-[22px] bg-surface p-4 shadow-[var(--shadow-card)] ring-1 ring-ink/6"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-[17px] font-semibold leading-snug">
@@ -127,12 +144,14 @@ export function VerdictView({ product }: { product: Product }) {
 
         {verdict.unknowns.length > 0 ? (
           <section className="mt-7">
-            <SectionLabel>Not in the mapping table</SectionLabel>
+            <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
+              Not in the mapping table
+            </p>
             <div className="space-y-2">
               {verdict.unknowns.map((ingredient) => (
                 <div
                   key={ingredient.id}
-                  className="rounded-surface border border-line bg-surface p-4"
+                  className="rounded-[22px] bg-surface p-4 shadow-[var(--shadow-card)] ring-1 ring-ink/6"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-[17px] font-semibold leading-snug">
@@ -150,7 +169,9 @@ export function VerdictView({ product }: { product: Product }) {
         ) : null}
 
         <section className="mt-7">
-          <SectionLabel>Checked against {selectedMember.name}&rsquo;s profile</SectionLabel>
+          <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
+            Checked against {selectedMember.name}
+          </p>
           <div className="flex flex-wrap gap-2">
             {selectedMember.allergens.length === 0 &&
             selectedMember.protocols.length === 0 ? (
@@ -176,8 +197,10 @@ export function VerdictView({ product }: { product: Product }) {
 
         {others.length > 0 ? (
           <section className="mt-7">
-            <SectionLabel>Same product, rest of the household</SectionLabel>
-            <ul className="divide-y divide-line border-y border-line">
+            <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
+              Rest of the household
+            </p>
+            <ul className="space-y-2">
               {others.map((member) => {
                 const theirs = computeVerdict(product, member);
                 return (
@@ -185,14 +208,15 @@ export function VerdictView({ product }: { product: Product }) {
                     <button
                       type="button"
                       onClick={() => selectMember(member.id)}
-                      className="flex w-full items-center gap-4 py-4 text-left"
+                      className="flex w-full items-center gap-3 rounded-[22px] bg-surface p-3 pr-4 text-left shadow-[var(--shadow-card)] ring-1 ring-ink/6"
                     >
+                      <Avatar member={member} size="sm" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-[16px] font-semibold">
                           {member.name}
                         </span>
                         <span className="mt-0.5 block truncate text-[13px] text-ink-muted">
-                          Tap to see this product read for {member.name}
+                          Tap to read this for {member.name}
                         </span>
                       </span>
                       <StatusPill status={theirs.status} />

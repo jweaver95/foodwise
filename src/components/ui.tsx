@@ -60,7 +60,7 @@ const buttonTones: Record<ButtonTone, string> = {
 };
 
 const buttonBase =
-  "flex min-h-[54px] w-full items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-transform duration-150 active:scale-[0.98] disabled:opacity-40";
+  "flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-40";
 
 export function Button({
   tone = "primary",

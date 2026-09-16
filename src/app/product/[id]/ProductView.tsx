@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { ProductPhoto } from "@/components/ProductPhoto";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import {
   Badge,
@@ -31,7 +32,17 @@ export function ProductView({ product }: { product: Product }) {
 
       <ScreenBody>
         <div className="pt-1">
-          <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">
+          <div className="bezel">
+            <div className="bezel-inner relative h-[180px] bg-surface">
+              <ProductPhoto
+                src={product.image}
+                alt=""
+                className="h-full w-full"
+                sizes="400px"
+              />
+            </div>
+          </div>
+          <h1 className="mt-5 text-[28px] font-bold leading-tight tracking-[-0.02em]">
             {product.name}
           </h1>
           <p className="mt-2 font-mono text-[13px] text-ink-muted">

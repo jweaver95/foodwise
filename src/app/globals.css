@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #eef1ec;
-  --paper-2: #e3e9e4;
-  --surface: #f7f9f6;
+  --paper: #f3f5f1;
+  --paper-2: #e6ebe4;
+  --surface: #fbfcf9;
   --ink: #14201a;
   --ink-muted: #5c6b63;
-  --line: #d5ddd6;
+  --line: #d7ddd6;
   --forest: #1f5c45;
   --forest-deep: #163f30;
   --pass: #1f5c45;
@@ -19,14 +19,16 @@
   --unknown-soft: #f6ead3;
   --unknown-ink: #7a4708;
   --viewfinder: #0d120f;
-  --shadow: 0 18px 40px rgb(20 32 26 / 0.12);
+  --shadow: 0 22px 48px rgb(20 32 26 / 0.16);
+  --shadow-card: 0 14px 32px rgb(20 32 26 / 0.08);
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #121714;
     --paper-2: #1a211c;
-    --surface: #1a211c;
+    --surface: #1c2420;
     --ink: #e8eee9;
     --ink-muted: #9aa89f;
     --line: #2c3832;
@@ -42,7 +44,8 @@
     --unknown-soft: #33270f;
     --unknown-ink: #e8c078;
     --viewfinder: #080b09;
-    --shadow: 0 18px 40px rgb(0 0 0 / 0.45);
+    --shadow: 0 22px 48px rgb(0 0 0 / 0.5);
+    --shadow-card: 0 14px 32px rgb(0 0 0 / 0.28);
   }
 }
 
@@ -69,7 +72,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --radius-surface: 16px;
+  --radius-surface: 22px;
 }
 
 * {
@@ -84,17 +87,42 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Section labels: small caps-style label above a group. */
 .label-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
   color: var(--ink-muted);
 }
 
-.hairline {
-  border-color: var(--line);
+.grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+@media (prefers-color-scheme: dark) {
+  .grain {
+    mix-blend-mode: overlay;
+    opacity: 0.07;
+  }
+}
+
+.bezel {
+  padding: 5px;
+  border-radius: 26px;
+  background: rgb(20 32 26 / 0.04);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55);
+}
+
+.bezel-inner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 21px;
+  box-shadow: var(--shadow-card);
 }
 
 @keyframes scanline {
@@ -107,7 +135,7 @@ body {
 }
 
 .scanline {
-  animation: scanline 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  animation: scanline 1.8s var(--ease) infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {

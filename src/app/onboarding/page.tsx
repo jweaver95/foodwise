@@ -85,8 +85,8 @@ export default function OnboardingPage() {
         {step === 0 ? (
           <div className="space-y-8">
             <div>
-              <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">
-                Who are you shopping for?
+              <h1 className="text-[30px] font-bold leading-tight tracking-[-0.03em] text-wrap-balance">
+                Who are you protecting?
               </h1>
               <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">
                 Start with the person whose allergies you check most often. You
