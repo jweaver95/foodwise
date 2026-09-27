@@ -1,3 +1,4 @@
+import { getSupabase } from "./supabase/browser";
 import {
   clearHousehold,
   demoHousehold,
@@ -7,6 +8,9 @@ import {
 } from "./storage";
 import type { HouseholdMember, HouseholdState, RecentScan } from "./types";
 
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 /* localStorage is an external system, so the household lives in an external
    store that React subscribes to. This keeps the server render deterministic
    and avoids a hydration pass that writes state from an effect. */
@@ -14,16 +18,97 @@ import type { HouseholdMember, HouseholdState, RecentScan } from "./types";
 const listeners = new Set<() => void>();
 
 let snapshot: HouseholdState | null = null;
+let accountUserId: string | null = null;
+let ready = false;
+let pushChain: Promise<void> = Promise.resolve();
+let lastScanKey = "";
+
+function notify() {
+  for (const listener of listeners) listener();
+}
 
 function readSnapshot(): HouseholdState {
   snapshot ??= loadHousehold();
   return snapshot;
 }
 
-function commit(next: HouseholdState) {
+function isUuid(value: string | null | undefined): value is string {
+  return Boolean(value && UUID.test(value));
+}
+
+function pushAccount(state: HouseholdState) {
+  const userId = accountUserId;
+  if (!userId || state.source !== "account") return;
+  const captured = state;
+  pushChain = pushChain
+    .then(async () => {
+      const supabase = getSupabase();
+      const members = captured.members.filter((member) => isUuid(member.id));
+
+      if (members.length > 0) {
+        const { error } = await supabase.from("household_members").upsert(
+          members.map((member) => ({
+            id: member.id,
+            user_id: userId,
+            name: member.name,
+            relation: member.relation,
+            category_ids: member.categoryIds ?? [],
+          })),
+        );
+        if (error) throw error;
+        const { error: deleteError } = await supabase
+          .from("household_members")
+          .delete()
+          .eq("user_id", userId)
+          .not("id", "in", `(${members.map((member) => member.id).join(",")})`);
+        if (deleteError) throw deleteError;
+      } else {
+        const { error } = await supabase
+          .from("household_members")
+          .delete()
+          .eq("user_id", userId);
+        if (error) throw error;
+      }
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          shopper_name: captured.shopperName,
+          selected_member_id: isUuid(captured.selectedMemberId)
+            ? captured.selectedMemberId
+            : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+      if (profileError) throw profileError;
+
+      const scan = captured.recentScans[0];
+      if (!scan) return;
+      const scanKey = `${scan.productId}|${scan.memberId}|${scan.at}`;
+      if (scanKey === lastScanKey) return;
+      lastScanKey = scanKey;
+      const { error: scanError } = await supabase.from("scans").insert({
+        user_id: userId,
+        member_id: isUuid(scan.memberId) ? scan.memberId : null,
+        member_name: scan.memberName,
+        product_key: scan.productId,
+        status: scan.status,
+      });
+      if (scanError) throw scanError;
+    })
+    .catch(() => {
+      // The screen already shows the household. A failed write is retried on the next edit.
+    });
+}
+
+function commit(next: HouseholdState, origin: "edit" | "hydrate" = "edit") {
   snapshot = next;
-  saveHousehold(next);
-  for (const listener of listeners) listener();
+  if (origin === "edit" && next.source === "account" && accountUserId) {
+    pushAccount(next);
+  } else if (origin === "edit" && next.source !== "account") {
+    saveHousehold(next);
+  }
+  notify();
 }
 
 function mutate(mutator: (current: HouseholdState) => HouseholdState) {
@@ -41,7 +126,21 @@ export const householdStore = {
   getServerSnapshot(): HouseholdState {
     return emptyHousehold;
   },
+  isReady: () => ready,
+  setAccountUser(id: string | null) {
+    accountUserId = id;
+  },
+  markReady() {
+    ready = true;
+    notify();
+  },
 };
+
+export function hydrateHousehold(next: HouseholdState) {
+  const scan = next.recentScans[0];
+  lastScanKey = scan ? `${scan.productId}|${scan.memberId}|${scan.at}` : "";
+  commit(next, "hydrate");
+}
 
 export function loadDemo() {
   commit(demoHousehold);

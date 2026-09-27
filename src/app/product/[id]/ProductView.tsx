@@ -12,8 +12,7 @@ import {
   SectionLabel,
 } from "@/components/ui";
 import { useHousehold } from "@/context/HouseholdContext";
-import { allergenLabel } from "@/lib/allergens";
-import { computeVerdict } from "@/lib/engine";
+import { computeVerdict, restrictionLabel } from "@/lib/engine";
 import type { Product } from "@/lib/types";
 
 export function ProductView({ product }: { product: Product }) {
@@ -73,9 +72,12 @@ export function ProductView({ product }: { product: Product }) {
                     </p>
                     {ingredient.unknown ? (
                       <Badge tone="unknown">Unknown</Badge>
-                    ) : ingredient.mappedTo ? (
+                    ) : ingredient.categoryName || ingredient.mappedTo ? (
                       <Badge tone={triggered ? "fail" : "neutral"}>
-                        {allergenLabel(ingredient.mappedTo)}
+                        {restrictionLabel({
+                          categoryName: ingredient.categoryName,
+                          allergenId: ingredient.mappedTo,
+                        })}
                       </Badge>
                     ) : null}
                   </div>
@@ -84,7 +86,7 @@ export function ProductView({ product }: { product: Product }) {
                       {ingredient.plain}
                       {triggered && selectedMember
                         ? ` On ${selectedMember.name}'s profile.`
-                        : ingredient.mappedTo && selectedMember
+                        : (ingredient.categoryName || ingredient.mappedTo) && selectedMember
                           ? ` Not on ${selectedMember.name}'s profile.`
                           : ""}
                     </p>

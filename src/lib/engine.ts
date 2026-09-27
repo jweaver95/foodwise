@@ -1,5 +1,6 @@
 import { allergenLabel, listToProse } from "./allergens";
 import type {
+  AllergenId,
   HouseholdMember,
   Ingredient,
   Product,
@@ -15,6 +16,16 @@ function evaluateIngredient(
   ingredient: Ingredient,
   member: HouseholdMember,
 ): { hit?: RuleHit; bystander?: RuleHit; unknown?: Ingredient } {
+  if (ingredient.categoryId != null) {
+    const selected = member.categoryIds?.includes(ingredient.categoryId) ?? false;
+    const record: RuleHit = {
+      ingredient,
+      categoryName: ingredient.categoryName,
+      reason: ingredient.categoryType === "additive" ? "protocol" : "allergen",
+    };
+    return selected ? { hit: record } : { bystander: record };
+  }
+
   if (ingredient.unknown) {
     // Missing mapping is never treated as safe.
     return { unknown: ingredient };
@@ -65,8 +76,33 @@ export function computeVerdict(
   return { status, hits, unknowns, bystanders };
 }
 
+export function restrictionLabel(hit: {
+  allergenId?: AllergenId;
+  categoryName?: string;
+}): string {
+  if (hit.categoryName) {
+    return hit.categoryName.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+  if (hit.allergenId) return allergenLabel(hit.allergenId);
+  return "Restricted";
+}
+
+export function memberRestrictionLabels(member: HouseholdMember): string[] {
+  if (member.categoryNames && member.categoryNames.length > 0) {
+    return member.categoryNames.map((name) =>
+      name.replace(/\b\w/g, (letter) => letter.toUpperCase()),
+    );
+  }
+  return [
+    ...member.allergens.map(allergenLabel),
+    ...member.protocols.map((id) =>
+      id === "gluten_free" ? "Gluten-free" : "Additive-averse",
+    ),
+  ];
+}
+
 export function triggeredLabels(verdict: Verdict): string[] {
-  return [...new Set(verdict.hits.map((hit) => allergenLabel(hit.allergenId)))];
+  return [...new Set(verdict.hits.map((hit) => restrictionLabel(hit)))];
 }
 
 export function verdictHeadline(
@@ -98,8 +134,8 @@ export function verdictHeadline(
 }
 
 export function ruleLine(hit: RuleHit): string {
-  const label = allergenLabel(hit.allergenId);
+  const label = restrictionLabel(hit);
   return hit.reason === "protocol"
-    ? `Maps to ${label}, flagged by the gluten-free protocol.`
+    ? `Maps to ${label}, flagged because it is on this profile.`
     : `Maps to ${label} in the ingredient mapping table.`;
 }

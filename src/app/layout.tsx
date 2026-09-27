@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AccountSync } from "@/components/AccountSync";
 import { AppChrome } from "@/components/TabBar";
 import { PhoneShell } from "@/components/PhoneShell";
 import "./globals.css";
@@ -18,6 +19,13 @@ export const metadata: Metadata = {
   title: "FoodWise",
   description:
     "Scan a product and see whether it is safe for your household, before you buy it.",
+  applicationName: "FoodWise",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "FoodWise",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
@@ -34,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <AccountSync />
         <PhoneShell>
           <AppChrome>{children}</AppChrome>
         </PhoneShell>

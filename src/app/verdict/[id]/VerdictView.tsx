@@ -21,8 +21,7 @@ import {
   selectMember,
   useHousehold,
 } from "@/context/HouseholdContext";
-import { allergenLabel, protocolLabel } from "@/lib/allergens";
-import { computeVerdict, ruleLine, verdictHeadline } from "@/lib/engine";
+import { computeVerdict, memberRestrictionLabels, restrictionLabel, ruleLine, verdictHeadline } from "@/lib/engine";
 import type { Product } from "@/lib/types";
 
 export function VerdictView({ product }: { product: Product }) {
@@ -131,7 +130,7 @@ export function VerdictView({ product }: { product: Product }) {
                     <p className="text-[17px] font-semibold leading-snug">
                       {hit.ingredient.label}
                     </p>
-                    <Badge tone="fail">{allergenLabel(hit.allergenId)}</Badge>
+                    <Badge tone="fail">{restrictionLabel(hit)}</Badge>
                   </div>
                   <p className="mt-2 text-[14px] leading-relaxed text-ink-muted">
                     {hit.ingredient.plain ?? ruleLine(hit)}
@@ -173,24 +172,16 @@ export function VerdictView({ product }: { product: Product }) {
             Checked against {selectedMember.name}
           </p>
           <div className="flex flex-wrap gap-2">
-            {selectedMember.allergens.length === 0 &&
-            selectedMember.protocols.length === 0 ? (
+            {memberRestrictionLabels(selectedMember).length === 0 ? (
               <p className="text-[14px] text-ink-muted">
                 No restrictions set, so nothing could be flagged.
               </p>
             ) : (
-              <>
-                {selectedMember.allergens.map((allergen) => (
-                  <Badge key={allergen} tone="pass">
-                    {allergenLabel(allergen)}
-                  </Badge>
-                ))}
-                {selectedMember.protocols.map((protocol) => (
-                  <Badge key={protocol} tone="pass">
-                    {protocolLabel(protocol)}
-                  </Badge>
-                ))}
-              </>
+              memberRestrictionLabels(selectedMember).map((label) => (
+                <Badge key={label} tone="pass">
+                  {label}
+                </Badge>
+              ))
             )}
           </div>
         </section>

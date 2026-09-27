@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import {
   Button,
@@ -11,12 +11,13 @@ import {
   ScreenFooter,
   SectionLabel,
 } from "@/components/ui";
-import { AllergenPicker, ProtocolPicker, TextField } from "@/components/pickers";
+import { AllergenPicker, CategoryPicker, ProtocolPicker, TextField } from "@/components/pickers";
 import {
   saveMember,
   setShopperName,
   useHousehold,
 } from "@/context/HouseholdContext";
+import { loadCategories } from "@/lib/account";
 import { summarizeProfile } from "@/lib/allergens";
 import type { AllergenId, ProtocolId } from "@/lib/types";
 
@@ -24,7 +25,8 @@ const STEPS = 3;
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { shopperName } = useHousehold();
+  const { shopperName, source } = useHousehold();
+  const account = source === "account";
 
   const [step, setStep] = useState(0);
   const [shopper, setShopper] = useState(shopperName);
@@ -32,17 +34,33 @@ export default function OnboardingPage() {
   const [relation, setRelation] = useState("");
   const [allergens, setAllergens] = useState<AllergenId[]>([]);
   const [protocols, setProtocols] = useState<ProtocolId[]>([]);
+  const [categories, setCategories] = useState<
+    { id: number; name: string; category_type: string }[]
+  >([]);
+  const [categoryIds, setCategoryIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!account) return;
+    void loadCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, [account]);
 
   const canAdvance = step === 0 ? name.trim().length > 0 : true;
 
   const finish = () => {
     setShopperName(shopper.trim() || "you");
+    const selected = categories.filter((category) => categoryIds.includes(category.id));
     saveMember({
-      id: `${name.trim().toLowerCase().replace(/\s+/g, "-")}-${Date.now().toString(36)}`,
+      id: account
+        ? crypto.randomUUID()
+        : `${name.trim().toLowerCase().replace(/\s+/g, "-")}-${Date.now().toString(36)}`,
       name: name.trim(),
       relation: relation.trim() || "Household member",
-      allergens,
-      protocols,
+      allergens: account ? [] : allergens,
+      protocols: account ? [] : protocols,
+      categoryIds: account ? selected.map((category) => category.id) : undefined,
+      categoryNames: account ? selected.map((category) => category.name) : undefined,
     });
     router.push("/home");
   };
@@ -129,7 +147,15 @@ export default function OnboardingPage() {
                 and FoodWise has nothing to protect against.
               </p>
             </div>
-            <AllergenPicker value={allergens} onChange={setAllergens} />
+            {account ? (
+              <CategoryPicker
+                categories={categories.filter((category) => category.category_type === "allergen")}
+                value={categoryIds}
+                onChange={setCategoryIds}
+              />
+            ) : (
+              <AllergenPicker value={allergens} onChange={setAllergens} />
+            )}
           </div>
         ) : null}
 
@@ -144,7 +170,15 @@ export default function OnboardingPage() {
                 apply.
               </p>
             </div>
-            <ProtocolPicker value={protocols} onChange={setProtocols} />
+            {account ? (
+              <CategoryPicker
+                categories={categories.filter((category) => category.category_type === "additive")}
+                value={categoryIds}
+                onChange={setCategoryIds}
+              />
+            ) : (
+              <ProtocolPicker value={protocols} onChange={setProtocols} />
+            )}
 
             <div>
               <SectionLabel>What gets checked</SectionLabel>
@@ -153,12 +187,18 @@ export default function OnboardingPage() {
                   {name.trim() || "Household member"}
                 </p>
                 <p className="mt-1 text-[14px] leading-relaxed text-ink-muted">
-                  {summarizeProfile(allergens, protocols)}
+                  {account
+                    ? categories
+                        .filter((category) => categoryIds.includes(category.id))
+                        .map((category) => category.name)
+                        .join(", ") || "No restrictions set"
+                    : summarizeProfile(allergens, protocols)}
                 </p>
               </div>
               <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
-                Allergy details stay on this device. Nothing is uploaded in this
-                prototype.
+                {account
+                  ? "This profile is saved to your FoodWise account."
+                  : "This demo profile stays on this device."}
               </p>
             </div>
           </div>

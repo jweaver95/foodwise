@@ -22,6 +22,9 @@ export type HouseholdMember = {
   relation: string;
   allergens: AllergenId[];
   protocols: ProtocolId[];
+  /** Selected rows from `allergen_categories` for a signed-in household. */
+  categoryIds?: number[];
+  categoryNames?: string[];
 };
 
 export type Ingredient = {
@@ -29,6 +32,10 @@ export type Ingredient = {
   label: string;
   /** Set when the ingredient maps to a tracked allergen in the mapping table. */
   mappedTo?: AllergenId;
+  /** Database category from `allergen_categories`, used for account profiles. */
+  categoryId?: number;
+  categoryName?: string;
+  categoryType?: "allergen" | "additive";
   /** True when the mapping table has no entry, so safety cannot be computed. */
   unknown?: boolean;
   /** Plain-language translation of a technical name. */
@@ -48,7 +55,8 @@ export type Product = {
 
 export type RuleHit = {
   ingredient: Ingredient;
-  allergenId: AllergenId;
+  allergenId?: AllergenId;
+  categoryName?: string;
   /** Why the rule fired: a direct allergen match or a dietary protocol. */
   reason: "allergen" | "protocol";
 };
@@ -75,4 +83,6 @@ export type HouseholdState = {
   selectedMemberId: string | null;
   recentScans: RecentScan[];
   onboarded: boolean;
+  /** Demo stays on this device. Account households are stored in Supabase. */
+  source: "local" | "demo" | "account";
 };

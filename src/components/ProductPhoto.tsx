@@ -11,15 +11,22 @@ export function ProductPhoto({
   className?: string;
   sizes?: string;
 }) {
+  const inline = src.startsWith("data:") || src.startsWith("blob:");
+
   return (
     <span className={`relative block overflow-hidden bg-paper-2 ${className}`}>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes={sizes}
-        className="object-cover"
-      />
+      {inline ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+      ) : (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={sizes}
+          className="object-cover"
+        />
+      )}
     </span>
   );
 }

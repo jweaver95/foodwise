@@ -1,5 +1,10 @@
-import { allergenLabel, listToProse } from "./allergens";
-import { triggeredLabels, verdictHeadline } from "./engine";
+import { listToProse } from "./allergens";
+import {
+  memberRestrictionLabels,
+  restrictionLabel,
+  triggeredLabels,
+  verdictHeadline,
+} from "./engine";
 import type { HouseholdMember, Product, Verdict } from "./types";
 
 /* Stand-in for the downstream explanation layer. In the real build a language
@@ -23,7 +28,7 @@ export function explainOpening(
   if (verdict.status === "CONTAINS_ALLERGEN") {
     const lines = verdict.hits.map(
       (hit) =>
-        `${hit.ingredient.label}, which maps to ${allergenLabel(hit.allergenId).toLowerCase()}`,
+        `${hit.ingredient.label}, which maps to ${restrictionLabel(hit).toLowerCase()}`,
     );
     const closing = verdict.hits.some((hit) => hit.reason === "allergen")
       ? `That is a direct match against ${member.name}'s profile, so the answer is no rather than maybe.`
@@ -47,10 +52,10 @@ export function buildPrompts(
   const prompts: ExplainPrompt[] = [];
 
   for (const hit of verdict.hits) {
-    const label = allergenLabel(hit.allergenId);
+    const label = restrictionLabel(hit);
     const reason =
       hit.reason === "protocol"
-        ? `${label} is flagged by ${member.name}'s gluten-free protocol`
+        ? `${label} is on ${member.name}'s profile as a dietary restriction`
         : `${label} is on ${member.name}'s profile`;
     prompts.push({
       id: `hit-${hit.ingredient.id}`,
@@ -60,7 +65,7 @@ export function buildPrompts(
   }
 
   for (const bystander of verdict.bystanders) {
-    const label = allergenLabel(bystander.allergenId);
+    const label = restrictionLabel(bystander);
     prompts.push({
       id: `bystander-${bystander.ingredient.id}`,
       question: `Does ${bystander.ingredient.label} matter here?`,
@@ -89,7 +94,7 @@ export function buildPrompts(
     prompts.push({
       id: "coverage",
       question: "What did you actually check?",
-      answer: `Every ingredient in the panel was checked against ${member.name}'s profile: ${listToProse([...member.allergens.map(allergenLabel)])}. FoodWise does not read cross-contamination warnings such as "made in a facility that also processes nuts", so check those on the package.`,
+      answer: `Every ingredient in the panel was checked against ${member.name}'s profile: ${listToProse(memberRestrictionLabels(member))}. FoodWise does not read cross-contamination warnings such as "made in a facility that also processes nuts", so check those on the package.`,
     });
   }
 

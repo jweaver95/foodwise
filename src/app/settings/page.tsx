@@ -6,12 +6,13 @@ import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button, Screen, ScreenBody, SectionLabel } from "@/components/ui";
 import { reset, useHousehold } from "@/context/HouseholdContext";
+import { signOutAccount } from "@/lib/account";
 
 const BUILD_NOTES = [
   {
     term: "Ingredient data",
     detail:
-      "Barcode lookups come from Open Food Facts, with USDA FoodData Central for nutrition. This prototype ships five fixed sample products.",
+      "A barcode looks the product up in Open Food Facts. A panel photo is read on this device, then you confirm the words. Either way, the mapping table decides, and a name that is not in that table stays unknown.",
   },
   {
     term: "Safety verdict",
@@ -21,18 +22,19 @@ const BUILD_NOTES = [
   {
     term: "Explanation layer",
     detail:
-      "A language model translates the verdict into plain language and answers follow-ups. It receives the verdict as an input and cannot change it.",
+      "Plain-language answers are derived from the verdict. They cannot change pass, contains, or unknown.",
   },
   {
-    term: "Not wired up yet",
+    term: "Your household",
     detail:
-      "Live camera, barcode SDK, OCR confidence handling, accounts, and the hosted database.",
+      "Signed-in profiles are stored in Supabase. The Priya walkthrough stays on this device.",
   },
 ];
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { shopperName, members } = useHousehold();
+  const { shopperName, members, source } = useHousehold();
+  const account = source === "account";
 
   return (
     <Screen>
@@ -59,13 +61,15 @@ export default function SettingsPage() {
             <CaretRight size={18} className="shrink-0 text-ink-muted" />
           </Link>
           <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
-            Shopping as {shopperName || "you"}. Profiles and scan history are
-            stored in this browser only, never uploaded.
+            Shopping as {shopperName || "you"}.{" "}
+            {account
+              ? "Profiles and scan history are saved to your account."
+              : "This demo stays on this device."}
           </p>
         </section>
 
         <section className="mt-8">
-          <SectionLabel>What is real in this prototype</SectionLabel>
+          <SectionLabel>How a verdict is made</SectionLabel>
           <dl className="divide-y divide-line border-y border-line">
             {BUILD_NOTES.map((note) => (
               <div key={note.term} className="py-4">
@@ -92,11 +96,15 @@ export default function SettingsPage() {
           <Button
             tone="outline"
             onClick={() => {
+              if (account) {
+                void signOutAccount().then(() => router.push("/"));
+                return;
+              }
               reset();
               router.push("/");
             }}
           >
-            Reset this prototype
+            {account ? "Sign out" : "Reset this demo"}
           </Button>
         </div>
       </ScreenBody>

@@ -8,11 +8,11 @@ import { loadDemo, useHousehold } from "@/context/HouseholdContext";
 
 export default function WelcomePage() {
   const router = useRouter();
-  const { hydrated, onboarded } = useHousehold();
+  const { hydrated, ready, onboarded, source } = useHousehold();
 
   useEffect(() => {
-    if (hydrated && onboarded) router.replace("/home");
-  }, [hydrated, onboarded, router]);
+    if (hydrated && ready && onboarded) router.replace("/home");
+  }, [hydrated, ready, onboarded, router]);
 
   return (
     <Screen>
@@ -42,18 +42,20 @@ export default function WelcomePage() {
           </p>
 
           <div className="mt-7 space-y-3">
-            <Button onClick={() => router.push("/onboarding")}>
+            <Button onClick={() => router.push("/account")}>
               Set up your household
             </Button>
-            <Button
-              tone="outline"
-              onClick={() => {
-                loadDemo();
-                router.push("/home");
-              }}
-            >
-              Walk through as Priya
-            </Button>
+            {source === "account" ? null : (
+              <Button
+                tone="outline"
+                onClick={() => {
+                  loadDemo();
+                  router.push("/home");
+                }}
+              >
+                Walk through as Priya
+              </Button>
+            )}
             <Disclaimer />
           </div>
         </div>

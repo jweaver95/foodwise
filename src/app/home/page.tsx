@@ -8,18 +8,18 @@ import { Avatar } from "@/components/Avatar";
 import { ProductPhoto } from "@/components/ProductPhoto";
 import { Disclaimer, Screen, ScreenBody, StatusPill } from "@/components/ui";
 import { selectMember, useHousehold } from "@/context/HouseholdContext";
-import { summarizeProfile } from "@/lib/allergens";
-import { getProduct } from "@/lib/data";
+import { memberRestrictionLabels } from "@/lib/engine";
 import { greetingFor } from "@/lib/greeting";
+import { recallProduct } from "@/lib/productCache";
 
 export default function HomePage() {
   const router = useRouter();
-  const { hydrated, onboarded, shopperName, members, selectedMember, recentScans } =
+  const { hydrated, ready, onboarded, shopperName, members, selectedMember, recentScans } =
     useHousehold();
 
   useEffect(() => {
-    if (hydrated && !onboarded) router.replace("/");
-  }, [hydrated, onboarded, router]);
+    if (hydrated && ready && !onboarded) router.replace("/");
+  }, [hydrated, ready, onboarded, router]);
 
   const todayCount = useMemo(() => {
     const start = new Date();
@@ -27,7 +27,7 @@ export default function HomePage() {
     return recentScans.filter((scan) => scan.at >= start.getTime()).length;
   }, [recentScans]);
 
-  if (!hydrated) {
+  if (!hydrated || !ready) {
     return (
       <Screen>
         <div className="flex flex-1 items-center justify-center px-6">
@@ -111,7 +111,10 @@ export default function HomePage() {
         <Link href="/scan" className="bezel mt-6 block active:scale-[0.99]">
             <div className="bezel-inner relative h-[210px]">
               <ProductPhoto
-                src={getProduct(recentScans[0]?.productId)?.image ?? "/photos/welcome.png"}
+                src={
+                  recallProduct(recentScans[0]?.productId ?? "")?.image ??
+                  "/photos/welcome.png"
+                }
                 alt=""
                 className="h-full w-full"
                 sizes="400px"
@@ -119,10 +122,8 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-gradient-to-t from-forest-deep/90 via-forest-deep/25 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-5 text-white">
                 <p className="text-[13px] font-medium text-white/75">
-                  {summarizeProfile(
-                    selectedMember.allergens,
-                    selectedMember.protocols,
-                  )}
+                  {memberRestrictionLabels(selectedMember).join(", ") ||
+                    "No restrictions set"}
                 </p>
                 <p className="mt-1 text-[26px] font-bold tracking-[-0.02em]">
                   Scan the next thing
@@ -151,10 +152,8 @@ export default function HomePage() {
                 <p className="text-[16px] font-semibold">{selectedMember.name}</p>
               </div>
               <p className="mt-2 line-clamp-2 text-[13px] leading-snug text-ink-muted">
-                {summarizeProfile(
-                  selectedMember.allergens,
-                  selectedMember.protocols,
-                )}
+                {memberRestrictionLabels(selectedMember).join(", ") ||
+                  "No restrictions set"}
               </p>
             </div>
           </div>
@@ -175,7 +174,7 @@ export default function HomePage() {
           ) : (
             <ul className="space-y-3">
               {recentScans.map((scan, index) => {
-                const product = getProduct(scan.productId);
+                const product = recallProduct(scan.productId);
                 if (!product) return null;
                 return (
                   <li key={`${scan.productId}-${scan.memberId}-${index}`}>

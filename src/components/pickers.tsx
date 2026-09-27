@@ -134,12 +134,14 @@ export function TextField({
   value,
   onChange,
   placeholder,
+  type = "text",
 }: {
   label: string;
   hint?: string;
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
+  type?: "text" | "email" | "password";
 }) {
   return (
     <label className="flex flex-col gap-2">
@@ -148,11 +150,40 @@ export function TextField({
         <span className="text-[13px] leading-relaxed text-ink-muted">{hint}</span>
       ) : null}
       <input
+        type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        autoCapitalize={type === "email" ? "none" : undefined}
+        autoComplete={type === "password" ? "current-password" : type === "email" ? "email" : undefined}
         className="min-h-[52px] rounded-surface border border-line bg-surface px-4 text-[16px] text-ink placeholder:text-ink-muted focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/30"
       />
     </label>
+  );
+}
+
+export function CategoryPicker({
+  categories,
+  value,
+  onChange,
+}: {
+  categories: { id: number; name: string }[];
+  value: number[];
+  onChange: (next: number[]) => void;
+}) {
+  const toggle = (id: number) =>
+    onChange(value.includes(id) ? value.filter((item) => item !== id) : [...value, id]);
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {categories.map((category) => (
+        <Toggle
+          key={category.id}
+          label={category.name.replace(/\b\w/g, (letter) => letter.toUpperCase())}
+          selected={value.includes(category.id)}
+          onClick={() => toggle(category.id)}
+        />
+      ))}
+    </div>
   );
 }

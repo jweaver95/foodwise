@@ -1,15 +1,8 @@
-import { notFound } from "next/navigation";
-import { PRODUCTS, getProduct } from "@/lib/data";
+"use client";
+
+import { ResolvedProduct } from "@/components/ResolvedProduct";
 import { VerdictView } from "./VerdictView";
 
-export function generateStaticParams() {
-  return PRODUCTS.map((product) => ({ id: product.id }));
-}
-
-export default async function VerdictPage(props: PageProps<"/verdict/[id]">) {
-  const { id } = await props.params;
-  const product = getProduct(id);
-  if (!product) notFound();
-
-  return <VerdictView product={product} />;
+export default function VerdictPage() {
+  return <ResolvedProduct>{(product) => <VerdictView product={product} />}</ResolvedProduct>;
 }

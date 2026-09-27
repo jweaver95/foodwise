@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash } from "@phosphor-icons/react/dist/ssr";
 import { Avatar } from "@/components/Avatar";
 import { ScreenHeader } from "@/components/ScreenHeader";
@@ -12,13 +12,14 @@ import {
   ScreenFooter,
   SectionLabel,
 } from "@/components/ui";
-import { AllergenPicker, ProtocolPicker, TextField } from "@/components/pickers";
+import { AllergenPicker, CategoryPicker, ProtocolPicker, TextField } from "@/components/pickers";
 import {
   removeMember,
   saveMember,
   useHousehold,
 } from "@/context/HouseholdContext";
-import { summarizeProfile } from "@/lib/allergens";
+import { loadCategories } from "@/lib/account";
+import { memberRestrictionLabels } from "@/lib/engine";
 import type { AllergenId, HouseholdMember, ProtocolId } from "@/lib/types";
 
 type Draft = {
@@ -27,6 +28,7 @@ type Draft = {
   relation: string;
   allergens: AllergenId[];
   protocols: ProtocolId[];
+  categoryIds: number[];
 };
 
 const blankDraft: Draft = {
@@ -35,11 +37,23 @@ const blankDraft: Draft = {
   relation: "",
   allergens: [],
   protocols: [],
+  categoryIds: [],
 };
 
 export default function HouseholdPage() {
-  const { members } = useHousehold();
+  const { members, source } = useHousehold();
+  const account = source === "account";
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [categories, setCategories] = useState<
+    { id: number; name: string; category_type: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (!account) return;
+    void loadCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, [account]);
 
   const startEdit = (member: HouseholdMember) =>
     setDraft({
@@ -48,19 +62,27 @@ export default function HouseholdPage() {
       relation: member.relation,
       allergens: member.allergens,
       protocols: member.protocols,
+      categoryIds: member.categoryIds ?? [],
     });
 
   const commit = () => {
     if (!draft || draft.name.trim().length === 0) return;
+    const selected = categories.filter((category) =>
+      draft.categoryIds.includes(category.id),
+    );
     const id =
       draft.id ??
-      `${draft.name.trim().toLowerCase().replace(/\s+/g, "-")}-${Date.now().toString(36)}`;
+      (account
+        ? crypto.randomUUID()
+        : `${draft.name.trim().toLowerCase().replace(/\s+/g, "-")}-${Date.now().toString(36)}`);
     saveMember({
       id,
       name: draft.name.trim(),
       relation: draft.relation.trim() || "Household member",
-      allergens: draft.allergens,
-      protocols: draft.protocols,
+      allergens: account ? [] : draft.allergens,
+      protocols: account ? [] : draft.protocols,
+      categoryIds: account ? selected.map((category) => category.id) : undefined,
+      categoryNames: account ? selected.map((category) => category.name) : undefined,
     });
     setDraft(null);
   };
@@ -99,20 +121,42 @@ export default function HouseholdPage() {
             />
           </div>
 
-          <div className="mt-8">
-            <AllergenPicker
-              value={draft.allergens}
-              onChange={(allergens) => setDraft({ ...draft, allergens })}
-            />
-          </div>
-
-          <div className="mt-8">
-            <SectionLabel>Dietary protocols</SectionLabel>
-            <ProtocolPicker
-              value={draft.protocols}
-              onChange={(protocols) => setDraft({ ...draft, protocols })}
-            />
-          </div>
+          {account ? (
+            <>
+              <div className="mt-8">
+                <SectionLabel>Allergens</SectionLabel>
+                <CategoryPicker
+                  categories={categories.filter((category) => category.category_type === "allergen")}
+                  value={draft.categoryIds}
+                  onChange={(categoryIds) => setDraft({ ...draft, categoryIds })}
+                />
+              </div>
+              <div className="mt-8">
+                <SectionLabel>Additives and protocols</SectionLabel>
+                <CategoryPicker
+                  categories={categories.filter((category) => category.category_type === "additive")}
+                  value={draft.categoryIds}
+                  onChange={(categoryIds) => setDraft({ ...draft, categoryIds })}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mt-8">
+                <AllergenPicker
+                  value={draft.allergens}
+                  onChange={(allergens) => setDraft({ ...draft, allergens })}
+                />
+              </div>
+              <div className="mt-8">
+                <SectionLabel>Dietary protocols</SectionLabel>
+                <ProtocolPicker
+                  value={draft.protocols}
+                  onChange={(protocols) => setDraft({ ...draft, protocols })}
+                />
+              </div>
+            </>
+          )}
         </ScreenBody>
         <ScreenFooter>
           <Button disabled={draft.name.trim().length === 0} onClick={commit}>
@@ -155,7 +199,7 @@ export default function HouseholdPage() {
                     {member.relation}
                   </span>
                   <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">
-                    {summarizeProfile(member.allergens, member.protocols)}
+                    {memberRestrictionLabels(member).join(", ") || "No restrictions set"}
                   </span>
                 </span>
               </button>
@@ -181,8 +225,9 @@ export default function HouseholdPage() {
         </button>
 
         <p className="mt-6 text-[13px] leading-relaxed text-ink-muted">
-          Allergy profiles are health-adjacent data. In this prototype they never
-          leave your browser.
+          {account
+            ? "Profiles are saved to your FoodWise account and protected by row-level security."
+            : "This demo profile stays on this device."}
         </p>
 
         <Disclaimer className="mt-6" />

@@ -9,6 +9,7 @@ export const emptyHousehold: HouseholdState = {
   selectedMemberId: null,
   recentScans: [],
   onboarded: false,
+  source: "local",
 };
 
 export const demoHousehold: HouseholdState = {
@@ -17,6 +18,7 @@ export const demoHousehold: HouseholdState = {
   selectedMemberId: DEMO_MEMBERS[0].id,
   recentScans: [],
   onboarded: true,
+  source: "demo",
 };
 
 export function loadHousehold(): HouseholdState {
@@ -31,6 +33,7 @@ export function loadHousehold(): HouseholdState {
       ...parsed,
       members: parsed.members,
       recentScans: Array.isArray(parsed.recentScans) ? parsed.recentScans : [],
+      source: parsed.source === "demo" ? "demo" : "local",
     };
   } catch {
     return emptyHousehold;
