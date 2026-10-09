@@ -132,9 +132,17 @@ export async function bootstrapAccount() {
   }
 }
 
+const PUBLIC_APP_URL = "https://foodwise-mu.vercel.app";
+
 export async function signUp(email: string, password: string) {
   const supabase = getSupabase();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${PUBLIC_APP_URL}/account`,
+    },
+  });
   if (error) throw error;
   return data;
 }

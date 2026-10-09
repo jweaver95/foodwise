@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button, Disclaimer, Screen, ScreenBody, ScreenFooter } from "@/components/ui";
 import { TextField } from "@/components/pickers";
@@ -11,7 +11,12 @@ import { useHousehold } from "@/context/HouseholdContext";
 
 export default function AccountPage() {
   const router = useRouter();
-  const { ready } = useHousehold();
+  const { ready, source, onboarded } = useHousehold();
+
+  useEffect(() => {
+    if (!ready || source !== "account") return;
+    router.replace(onboarded ? "/home" : "/onboarding");
+  }, [ready, source, onboarded, router]);
   const [mode, setMode] = useState<"create" | "sign-in">("create");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
