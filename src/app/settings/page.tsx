@@ -33,7 +33,7 @@ const BUILD_NOTES = [
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { shopperName, members, source } = useHousehold();
+  const { shopperName, members, source, syncError } = useHousehold();
   const account = source === "account";
 
   return (
@@ -64,8 +64,11 @@ export default function SettingsPage() {
             Shopping as {shopperName || "you"}.{" "}
             {account
               ? "Profiles and scan history are saved to your account."
-              : "This demo stays on this device."}
+              : "This sample stays on this device."}
           </p>
+          {syncError ? (
+            <p className="mt-3 text-[13px] leading-relaxed text-fail-ink">{syncError}</p>
+          ) : null}
         </section>
 
         <section className="mt-8">

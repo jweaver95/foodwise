@@ -22,6 +22,12 @@ let accountUserId: string | null = null;
 let ready = false;
 let pushChain: Promise<void> = Promise.resolve();
 let lastScanKey = "";
+let syncError: string | null = null;
+
+function scanProductKey(productId: string): string {
+  const barcode = /^barcode-(\d+)$/.exec(productId);
+  return barcode ? barcode[1] : productId;
+}
 
 function notify() {
   for (const listener of listeners) listener();
@@ -91,13 +97,19 @@ function pushAccount(state: HouseholdState) {
         user_id: userId,
         member_id: isUuid(scan.memberId) ? scan.memberId : null,
         member_name: scan.memberName,
-        product_key: scan.productId,
+        product_key: scanProductKey(scan.productId),
         status: scan.status,
       });
       if (scanError) throw scanError;
+      syncError = null;
+      notify();
     })
-    .catch(() => {
-      // The screen already shows the household. A failed write is retried on the next edit.
+    .catch((error: unknown) => {
+      syncError =
+        error instanceof Error
+          ? error.message
+          : "Your household could not be saved. It is still on this screen.";
+      notify();
     });
 }
 
@@ -127,6 +139,7 @@ export const householdStore = {
     return emptyHousehold;
   },
   isReady: () => ready,
+  readSyncError: () => syncError,
   setAccountUser(id: string | null) {
     accountUserId = id;
   },

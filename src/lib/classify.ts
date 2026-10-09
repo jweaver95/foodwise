@@ -11,6 +11,8 @@ export type CatalogTerm = {
   categoryId: number;
   categoryName: string;
   categoryType: "allergen" | "additive";
+  wholeWord?: boolean;
+  exceptions?: string[];
 };
 
 /** Whole-word aliases for category names. Short words stay bounded so "egg" does not match "eggplant". */
@@ -193,6 +195,15 @@ function slug(label: string, index: number): string {
   return `${base || "ingredient"}-${index}`;
 }
 
+function termMatches(raw: string, term: CatalogTerm): boolean {
+  const name = term.technicalName.toLowerCase();
+  const hit = term.wholeWord ? containsWord(raw, name) : raw.includes(name);
+  if (!hit) return false;
+  return !(term.exceptions ?? []).some(
+    (phrase) => phrase && raw.includes(phrase.toLowerCase()),
+  );
+}
+
 function mappedIngredient(
   label: string,
   index: number,
@@ -219,7 +230,7 @@ export function classifyIngredients(
   const ingredients = splitIngredientText(text).map((label, index) => {
     const raw = label.toLowerCase();
     const term = terms
-      .filter((item) => raw.includes(item.technicalName.toLowerCase()))
+      .filter((item) => termMatches(raw, item))
       .sort((a, b) => b.technicalName.length - a.technicalName.length)[0];
 
     if (term) {

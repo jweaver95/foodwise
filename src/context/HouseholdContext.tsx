@@ -29,6 +29,7 @@ export function useHousehold(): HouseholdState & {
   hydrated: boolean;
   ready: boolean;
   selectedMember: HouseholdMember | null;
+  syncError: string | null;
 } {
   const state = useSyncExternalStore(
     householdStore.subscribe,
@@ -47,5 +48,11 @@ export function useHousehold(): HouseholdState & {
     state.members[0] ??
     null;
 
-  return { ...state, hydrated, ready, selectedMember };
+  const syncError = useSyncExternalStore(
+    householdStore.subscribe,
+    householdStore.readSyncError,
+    () => null,
+  );
+
+  return { ...state, hydrated, ready, selectedMember, syncError };
 }

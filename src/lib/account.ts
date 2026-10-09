@@ -2,9 +2,10 @@ import {
   householdStore,
   hydrateHousehold,
 } from "./householdStore";
+import { recallProduct, rememberProduct } from "./productCache";
 import { emptyHousehold, loadHousehold } from "./storage";
 import { getSupabase } from "./supabase/browser";
-import type { HouseholdMember, HouseholdState, RecentScan, VerdictStatus } from "./types";
+import type { HouseholdMember, HouseholdState, Product, RecentScan, VerdictStatus } from "./types";
 
 type MemberRow = {
   id: string;
@@ -89,11 +90,26 @@ export async function bootstrapAccount() {
     const members = ((memberResult.data ?? []) as MemberRow[]).map(memberFromRow);
     const scans = ((scanResult.data ?? []) as ScanRow[]).map(
       (scan): RecentScan => ({
-        productId: scan.product_key,
+        productId: /^\d{8,14}$/.test(scan.product_key)
+          ? `barcode-${scan.product_key}`
+          : scan.product_key,
         memberId: scan.member_id ?? "",
         memberName: scan.member_name,
         status: scan.status,
         at: new Date(scan.created_at).getTime(),
+      }),
+    );
+    await Promise.all(
+      scans.map(async (scan) => {
+        const barcode = /^barcode-(\d+)$/.exec(scan.productId)?.[1];
+        if (!barcode || recallProduct(scan.productId)) return;
+        try {
+          const response = await fetch(`/api/lookup?barcode=${barcode}`);
+          const body = (await response.json()) as { product?: Product };
+          if (body.product) rememberProduct(body.product);
+        } catch {
+          // The scan still appears. Opening it asks for another scan if the product is gone.
+        }
       }),
     );
     const profile = profileResult.data as {

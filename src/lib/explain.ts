@@ -23,7 +23,15 @@ export function explainOpening(
   member: HouseholdMember,
   verdict: Verdict,
 ): string {
-  const { title } = verdictHeadline(verdict, member);
+  const { title, detail } = verdictHeadline(verdict, member);
+
+  if (
+    verdict.status === "LOOKUP_FAILED" ||
+    verdict.status === "UNKNOWN_PRODUCT" ||
+    verdict.status === "INSUFFICIENT_DATA"
+  ) {
+    return `${title}. ${detail} That answer is locked. It is not a pass.`;
+  }
 
   if (verdict.status === "CONTAINS_ALLERGEN") {
     const lines = verdict.hits.map(
@@ -50,6 +58,18 @@ export function buildPrompts(
   verdict: Verdict,
 ): ExplainPrompt[] {
   const prompts: ExplainPrompt[] = [];
+
+  if (
+    verdict.status === "LOOKUP_FAILED" ||
+    verdict.status === "UNKNOWN_PRODUCT" ||
+    verdict.status === "INSUFFICIENT_DATA"
+  ) {
+    prompts.push({
+      id: "catalog",
+      question: "Why isn't this a pass?",
+      answer: `${verdictHeadline(verdict, member).detail} A missing catalog, a missing product, or a missing ingredient list is never treated as safe.`,
+    });
+  }
 
   for (const hit of verdict.hits) {
     const label = restrictionLabel(hit);

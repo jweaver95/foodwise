@@ -14,6 +14,7 @@ import {
   Screen,
   ScreenBody,
   StatusPill,
+  VerdictDisclaimer,
   statusSurface,
 } from "@/components/ui";
 import {
@@ -21,12 +22,13 @@ import {
   selectMember,
   useHousehold,
 } from "@/context/HouseholdContext";
+import { getProduct } from "@/lib/data";
 import { computeVerdict, memberRestrictionLabels, restrictionLabel, ruleLine, verdictHeadline } from "@/lib/engine";
 import type { Product } from "@/lib/types";
 
 export function VerdictView({ product }: { product: Product }) {
   const router = useRouter();
-  const { hydrated, selectedMember, members } = useHousehold();
+  const { hydrated, selectedMember, members, source } = useHousehold();
   const [reporting, setReporting] = useState(false);
 
   const verdict = useMemo(
@@ -103,6 +105,16 @@ export function VerdictView({ product }: { product: Product }) {
           </div>
         </div>
 
+        {source !== "account" && getProduct(product.id) ? (
+          <p className="mt-4 text-[13px] leading-relaxed text-ink-muted">
+            This sample stays on this device.{" "}
+            <Link href="/account" className="font-semibold text-forest underline underline-offset-4">
+              Save your household
+            </Link>{" "}
+            to keep real scans.
+          </p>
+        ) : null}
+
         <div className="mt-6 flex items-center gap-3">
           <Avatar member={selectedMember} />
           <div>
@@ -114,6 +126,22 @@ export function VerdictView({ product }: { product: Product }) {
             </p>
           </div>
         </div>
+
+        {product.disclosures && product.disclosures.length > 0 ? (
+          <section className="mt-7 rounded-[22px] bg-surface p-4 ring-1 ring-ink/6">
+            <p className="text-[12px] font-semibold tracking-[0.12em] text-ink-muted uppercase">
+              Also on this label
+            </p>
+            <ul className="mt-3 space-y-3">
+              {product.disclosures.map((notice) => (
+                <li key={notice.name}>
+                  <p className="text-[16px] font-semibold">{notice.name}</p>
+                  <p className="mt-1 text-[14px] leading-relaxed text-ink-muted">{notice.plain}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {verdict.hits.length > 0 ? (
           <section className="mt-7">
@@ -234,7 +262,8 @@ export function VerdictView({ product }: { product: Product }) {
           </Link>
         </div>
 
-        <Disclaimer className="mt-6" />
+        <VerdictDisclaimer className="mt-6" />
+        <Disclaimer className="mt-3" />
       </ScreenBody>
 
       {reporting ? (

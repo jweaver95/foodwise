@@ -198,7 +198,7 @@ export default function OnboardingPage() {
               <p className="mt-3 text-[13px] leading-relaxed text-ink-muted">
                 {account
                   ? "This profile is saved to your FoodWise account."
-                  : "This demo profile stays on this device."}
+                  : "This sample stays on this device."}
               </p>
             </div>
           </div>

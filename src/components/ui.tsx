@@ -42,10 +42,21 @@ export function SectionLabel({ children }: { children: ReactNode }) {
   return <p className="label-eyebrow mb-3">{children}</p>;
 }
 
+export const LEGAL_DISCLAIMER =
+  "For informational purposes only. Scan results, ingredient flags, and product verdicts are provided for general educational and informational purposes—not as personalized medical or nutrition advice. If you have a health condition, severe allergy, or an unclear ingredient, please consult a qualified healthcare professional or registered dietitian.";
+
 export function Disclaimer({ className = "" }: { className?: string }) {
   return (
     <p className={`text-center text-[11px] text-ink-muted ${className}`}>
       Decision aid, not a medical device. Always read the label yourself.
+    </p>
+  );
+}
+
+export function VerdictDisclaimer({ className = "" }: { className?: string }) {
+  return (
+    <p className={`text-[12px] leading-relaxed text-ink-muted ${className}`}>
+      {LEGAL_DISCLAIMER}
     </p>
   );
 }
@@ -142,12 +153,18 @@ export const statusBadgeTone: Record<VerdictStatus, BadgeTone> = {
   PASS: "pass",
   CONTAINS_ALLERGEN: "fail",
   UNKNOWN_INGREDIENT: "unknown",
+  LOOKUP_FAILED: "unknown",
+  UNKNOWN_PRODUCT: "unknown",
+  INSUFFICIENT_DATA: "unknown",
 };
 
 export const statusShortLabel: Record<VerdictStatus, string> = {
   PASS: "Safe",
   CONTAINS_ALLERGEN: "Contains",
   UNKNOWN_INGREDIENT: "Unknown",
+  LOOKUP_FAILED: "No lookup",
+  UNKNOWN_PRODUCT: "No product",
+  INSUFFICIENT_DATA: "No panel",
 };
 
 /* Verdict surfaces: the one moment where color carries the whole message. */
@@ -155,6 +172,9 @@ export const statusSurface: Record<VerdictStatus, string> = {
   PASS: "bg-pass text-white",
   CONTAINS_ALLERGEN: "bg-fail text-white",
   UNKNOWN_INGREDIENT: "bg-unknown text-white",
+  LOOKUP_FAILED: "bg-unknown text-white",
+  UNKNOWN_PRODUCT: "bg-unknown text-white",
+  INSUFFICIENT_DATA: "bg-unknown text-white",
 };
 
 export function StatusPill({ status }: { status: VerdictStatus }) {

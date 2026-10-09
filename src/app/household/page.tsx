@@ -227,7 +227,7 @@ export default function HouseholdPage() {
         <p className="mt-6 text-[13px] leading-relaxed text-ink-muted">
           {account
             ? "Profiles are saved to your FoodWise account and protected by row-level security."
-            : "This demo profile stays on this device."}
+            : "This sample stays on this device."}
         </p>
 
         <Disclaimer className="mt-6" />

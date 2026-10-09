@@ -14,7 +14,18 @@ export type AllergenId =
 
 export type ProtocolId = "gluten_free" | "additive_averse";
 
-export type VerdictStatus = "PASS" | "CONTAINS_ALLERGEN" | "UNKNOWN_INGREDIENT";
+export type LookupStatus = "LOOKUP_FAILED" | "UNKNOWN_PRODUCT" | "INSUFFICIENT_DATA";
+
+export type VerdictStatus =
+  | LookupStatus
+  | "PASS"
+  | "CONTAINS_ALLERGEN"
+  | "UNKNOWN_INGREDIENT";
+
+export type Disclosure = {
+  name: string;
+  plain: string;
+};
 
 export type HouseholdMember = {
   id: string;
@@ -51,6 +62,10 @@ export type Product = {
   source: string;
   image: string;
   ingredients: Ingredient[];
+  /** Set when the catalog itself cannot support a pass, before any member is compared. */
+  lookupStatus?: LookupStatus;
+  /** Label notices such as Prop 65. They never change the verdict. */
+  disclosures?: Disclosure[];
 };
 
 export type RuleHit = {

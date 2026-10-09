@@ -9,6 +9,8 @@ type CategoryRow = {
 
 type TermRow = {
   technical_name: string;
+  whole_word: boolean | null;
+  qualifier_exceptions: string[] | null;
   allergen_categories: CategoryRow | CategoryRow[] | null;
 };
 
@@ -32,7 +34,9 @@ export async function loadIngredientCatalog(
       supabase.from("allergen_categories").select("id,name,category_type").order("id"),
       supabase
         .from("ingredient_terms")
-        .select("technical_name, allergen_categories(id,name,category_type)"),
+        .select(
+          "technical_name, whole_word, qualifier_exceptions, allergen_categories(id,name,category_type)",
+        ),
     ]);
 
   if (categoryError || termError) {
@@ -60,6 +64,8 @@ export async function loadIngredientCatalog(
         categoryId: category.id,
         categoryName: category.name,
         categoryType: category.category_type,
+        wholeWord: row.whole_word ?? false,
+        exceptions: row.qualifier_exceptions ?? [],
       },
     ];
   });

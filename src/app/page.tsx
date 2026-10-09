@@ -43,7 +43,7 @@ export default function WelcomePage() {
 
           <div className="mt-7 space-y-3">
             <Button onClick={() => router.push("/account")}>
-              Set up your household
+              Save your household
             </Button>
             {source === "account" ? null : (
               <Button
@@ -53,7 +53,7 @@ export default function WelcomePage() {
                   router.push("/home");
                 }}
               >
-                Walk through as Priya
+                Try a sample household
               </Button>
             )}
             <Disclaimer />

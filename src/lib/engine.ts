@@ -55,6 +55,10 @@ export function computeVerdict(
   product: Product,
   member: HouseholdMember,
 ): Verdict {
+  if (product.lookupStatus) {
+    return { status: product.lookupStatus, hits: [], unknowns: [], bystanders: [] };
+  }
+
   const hits: RuleHit[] = [];
   const bystanders: RuleHit[] = [];
   const unknowns: Ingredient[] = [];
@@ -109,6 +113,30 @@ export function verdictHeadline(
   verdict: Verdict,
   member: HouseholdMember,
 ): { kicker: string; title: string; detail: string } {
+  if (verdict.status === "LOOKUP_FAILED") {
+    return {
+      kicker: "Lookup failed",
+      title: `Nothing known for ${member.name}`,
+      detail: "The product catalog could not be reached, so this cannot be a pass.",
+    };
+  }
+
+  if (verdict.status === "UNKNOWN_PRODUCT") {
+    return {
+      kicker: "Unknown product",
+      title: `No record for ${member.name}`,
+      detail: "Open Food Facts has no product for this barcode, so this cannot be a pass.",
+    };
+  }
+
+  if (verdict.status === "INSUFFICIENT_DATA") {
+    return {
+      kicker: "Not enough on the label",
+      title: `No ingredient list for ${member.name}`,
+      detail: "The product was found, but there is no ingredient text, so FoodWise will not guess.",
+    };
+  }
+
   if (verdict.status === "CONTAINS_ALLERGEN") {
     const labels = triggeredLabels(verdict);
     return {

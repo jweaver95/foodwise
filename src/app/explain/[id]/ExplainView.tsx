@@ -7,6 +7,7 @@ import {
   Disclaimer,
   Screen,
   ScreenFooter,
+  VerdictDisclaimer,
   statusBadgeTone,
   statusShortLabel,
 } from "@/components/ui";
@@ -141,6 +142,7 @@ export function ExplainView({ product }: { product: Product }) {
             verdict did not change while you asked.
           </p>
         )}
+        <VerdictDisclaimer className="mb-3" />
         <Disclaimer />
       </ScreenFooter>
     </Screen>
