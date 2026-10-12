@@ -14,8 +14,16 @@ import { recallProduct } from "@/lib/productCache";
 
 export default function HomePage() {
   const router = useRouter();
-  const { hydrated, ready, onboarded, shopperName, members, selectedMember, recentScans } =
-    useHousehold();
+  const {
+    hydrated,
+    ready,
+    onboarded,
+    source,
+    shopperName,
+    members,
+    selectedMember,
+    recentScans,
+  } = useHousehold();
 
   useEffect(() => {
     if (hydrated && ready && !onboarded) router.replace("/");
@@ -99,13 +107,15 @@ export default function HomePage() {
                 </button>
               );
             })}
-            <Link
-              href="/household"
-              aria-label="Add a household member"
-              className="flex size-[62px] shrink-0 items-center justify-center rounded-[22px] bg-surface text-ink ring-1 ring-ink/6"
-            >
-              <Plus size={22} />
-            </Link>
+            {source === "demo" ? null : (
+              <Link
+                href="/household"
+                aria-label="Add a household member"
+                className="flex size-[62px] shrink-0 items-center justify-center rounded-[22px] bg-surface text-ink ring-1 ring-ink/6"
+              >
+                <Plus size={22} />
+              </Link>
+            )}
           </div>
 
         <Link href="/scan" className="bezel mt-6 block active:scale-[0.99]">

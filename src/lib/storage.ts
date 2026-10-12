@@ -28,12 +28,26 @@ export function loadHousehold(): HouseholdState {
     if (!raw) return emptyHousehold;
     const parsed = JSON.parse(raw) as Partial<HouseholdState>;
     if (!Array.isArray(parsed.members)) return emptyHousehold;
+    if (parsed.source === "demo") {
+      const demoIds = new Set(DEMO_MEMBERS.map((member) => member.id));
+      const selected = parsed.selectedMemberId;
+      return {
+        ...demoHousehold,
+        selectedMemberId:
+          typeof selected === "string" && demoIds.has(selected)
+            ? selected
+            : demoHousehold.selectedMemberId,
+        recentScans: Array.isArray(parsed.recentScans)
+          ? parsed.recentScans.filter((scan) => demoIds.has(scan.memberId))
+          : [],
+      };
+    }
     return {
       ...emptyHousehold,
       ...parsed,
       members: parsed.members,
       recentScans: Array.isArray(parsed.recentScans) ? parsed.recentScans : [],
-      source: parsed.source === "demo" ? "demo" : "local",
+      source: "local",
     };
   } catch {
     return emptyHousehold;

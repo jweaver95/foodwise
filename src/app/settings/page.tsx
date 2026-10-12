@@ -64,7 +64,9 @@ export default function SettingsPage() {
             Shopping as {shopperName || "you"}.{" "}
             {account
               ? "Profiles and scan history are saved to your account."
-              : "This sample stays on this device."}
+              : source === "demo"
+                ? "This sample household is fixed. The people here cannot be added to or changed."
+                : "This sample stays on this device."}
           </p>
           {syncError ? (
             <p className="mt-3 text-[13px] leading-relaxed text-fail-ink">{syncError}</p>

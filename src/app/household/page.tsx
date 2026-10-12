@@ -43,6 +43,7 @@ const blankDraft: Draft = {
 export default function HouseholdPage() {
   const { members, source } = useHousehold();
   const account = source === "account";
+  const sample = source === "demo";
   const [draft, setDraft] = useState<Draft | null>(null);
   const [categories, setCategories] = useState<
     { id: number; name: string; category_type: string }[]
@@ -66,7 +67,7 @@ export default function HouseholdPage() {
     });
 
   const commit = () => {
-    if (!draft || draft.name.trim().length === 0) return;
+    if (sample || !draft || draft.name.trim().length === 0) return;
     const selected = categories.filter((category) =>
       draft.categoryIds.includes(category.id),
     );
@@ -185,49 +186,72 @@ export default function HouseholdPage() {
               key={member.id}
               className="flex items-center gap-3 rounded-[22px] bg-surface p-3 pr-2 shadow-[var(--shadow-card)] ring-1 ring-ink/6"
             >
-              <button
-                type="button"
-                onClick={() => startEdit(member)}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left"
-              >
-                <Avatar member={member} />
-                <span className="min-w-0">
-                  <span className="block text-[17px] font-semibold">
-                    {member.name}
+              {sample ? (
+                <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <Avatar member={member} />
+                  <span className="min-w-0">
+                    <span className="block text-[17px] font-semibold">
+                      {member.name}
+                    </span>
+                    <span className="mt-0.5 block text-[13px] text-ink-muted">
+                      {member.relation}
+                    </span>
+                    <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">
+                      {memberRestrictionLabels(member).join(", ") || "No restrictions set"}
+                    </span>
                   </span>
-                  <span className="mt-0.5 block text-[13px] text-ink-muted">
-                    {member.relation}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => startEdit(member)}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                >
+                  <Avatar member={member} />
+                  <span className="min-w-0">
+                    <span className="block text-[17px] font-semibold">
+                      {member.name}
+                    </span>
+                    <span className="mt-0.5 block text-[13px] text-ink-muted">
+                      {member.relation}
+                    </span>
+                    <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">
+                      {memberRestrictionLabels(member).join(", ") || "No restrictions set"}
+                    </span>
                   </span>
-                  <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">
-                    {memberRestrictionLabels(member).join(", ") || "No restrictions set"}
-                  </span>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => removeMember(member.id)}
-                aria-label={`Remove ${member.name}`}
-                className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-muted"
-              >
-                <Trash size={18} />
-              </button>
+                </button>
+              )}
+              {sample ? null : (
+                <button
+                  type="button"
+                  onClick={() => removeMember(member.id)}
+                  aria-label={`Remove ${member.name}`}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-muted"
+                >
+                  <Trash size={18} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
 
-        <button
-          type="button"
-          onClick={() => setDraft(blankDraft)}
-          className="mt-5 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-surface text-[15px] font-semibold shadow-[var(--shadow-card)] ring-1 ring-ink/6 active:scale-[0.99]"
-        >
-          <Plus size={18} weight="bold" />
-          Add a person
-        </button>
+        {sample ? null : (
+          <button
+            type="button"
+            onClick={() => setDraft(blankDraft)}
+            className="mt-5 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-surface text-[15px] font-semibold shadow-[var(--shadow-card)] ring-1 ring-ink/6 active:scale-[0.99]"
+          >
+            <Plus size={18} weight="bold" />
+            Add a person
+          </button>
+        )}
 
         <p className="mt-6 text-[13px] leading-relaxed text-ink-muted">
           {account
             ? "Profiles are saved to your FoodWise account and protected by row-level security."
-            : "This sample stays on this device."}
+            : sample
+              ? "This sample household stays as it is: Priya shopping for the people already here. Save your household from the welcome screen to add your own."
+              : "This sample stays on this device."}
         </p>
 
         <Disclaimer className="mt-6" />

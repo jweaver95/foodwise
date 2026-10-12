@@ -154,6 +154,21 @@ export async function signIn(email: string, password: string) {
   await bootstrapAccount();
 }
 
+export async function requestPasswordReset(email: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${PUBLIC_APP_URL}/account/reset`,
+  });
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string) {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+  await bootstrapAccount();
+}
+
 export async function signOutAccount() {
   const supabase = getSupabase();
   householdStore.setAccountUser(null);

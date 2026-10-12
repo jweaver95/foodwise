@@ -135,6 +135,7 @@ export function TextField({
   onChange,
   placeholder,
   type = "text",
+  autoComplete,
 }: {
   label: string;
   hint?: string;
@@ -142,6 +143,7 @@ export function TextField({
   onChange: (next: string) => void;
   placeholder?: string;
   type?: "text" | "email" | "password";
+  autoComplete?: string;
 }) {
   return (
     <label className="flex flex-col gap-2">
@@ -155,7 +157,10 @@ export function TextField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         autoCapitalize={type === "email" ? "none" : undefined}
-        autoComplete={type === "password" ? "current-password" : type === "email" ? "email" : undefined}
+        autoComplete={
+          autoComplete ??
+          (type === "password" ? "current-password" : type === "email" ? "email" : undefined)
+        }
         className="min-h-[52px] rounded-surface border border-line bg-surface px-4 text-[16px] text-ink placeholder:text-ink-muted focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/30"
       />
     </label>

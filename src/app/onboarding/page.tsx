@@ -28,6 +28,10 @@ export default function OnboardingPage() {
   const { shopperName, source } = useHousehold();
   const account = source === "account";
 
+  useEffect(() => {
+    if (source === "demo") router.replace("/home");
+  }, [source, router]);
+
   const [step, setStep] = useState(0);
   const [shopper, setShopper] = useState(shopperName);
   const [name, setName] = useState("");

@@ -164,6 +164,7 @@ export function selectMember(id: string) {
 }
 
 export function saveMember(member: HouseholdMember) {
+  if (readSnapshot().source === "demo") return;
   mutate((current) => {
     const exists = current.members.some((item) => item.id === member.id);
     return {
@@ -178,6 +179,7 @@ export function saveMember(member: HouseholdMember) {
 }
 
 export function removeMember(id: string) {
+  if (readSnapshot().source === "demo") return;
   mutate((current) => {
     const members = current.members.filter((item) => item.id !== id);
     return {
@@ -192,6 +194,7 @@ export function removeMember(id: string) {
 }
 
 export function setShopperName(name: string) {
+  if (readSnapshot().source === "demo") return;
   mutate((current) => ({ ...current, shopperName: name }));
 }
 
