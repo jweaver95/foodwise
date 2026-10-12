@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Screen } from "@/components/ui";
-import { recallProduct } from "@/lib/productCache";
+import { recallProduct, rememberProduct } from "@/lib/productCache";
 import type { Product } from "@/lib/types";
 
 export function ResolvedProduct({
@@ -16,7 +16,34 @@ export function ResolvedProduct({
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
 
   useEffect(() => {
-    setProduct(recallProduct(id) ?? null);
+    const found = recallProduct(id);
+    if (found) {
+      setProduct(found);
+      return;
+    }
+    const barcode = /^barcode-(\d+)$/.exec(id)?.[1];
+    if (!barcode) {
+      setProduct(null);
+      return;
+    }
+    let cancelled = false;
+    void fetch(`/api/lookup?barcode=${barcode}`)
+      .then((response) => response.json() as Promise<{ product?: Product }>)
+      .then((body) => {
+        if (cancelled) return;
+        if (!body.product) {
+          setProduct(null);
+          return;
+        }
+        rememberProduct(body.product);
+        setProduct(body.product);
+      })
+      .catch(() => {
+        if (!cancelled) setProduct(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (product === undefined) {

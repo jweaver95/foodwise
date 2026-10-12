@@ -16,6 +16,11 @@ export type ProtocolId = "gluten_free" | "additive_averse";
 
 export type LookupStatus = "LOOKUP_FAILED" | "UNKNOWN_PRODUCT" | "INSUFFICIENT_DATA";
 
+/** A barcode neither Foodwise nor Open Food Facts could identify. It is a result, not a product. */
+export function isUnverifiedLookup(status: string | null | undefined): boolean {
+  return status === "LOOKUP_FAILED" || status === "UNKNOWN_PRODUCT";
+}
+
 export type VerdictStatus =
   | LookupStatus
   | "PASS"

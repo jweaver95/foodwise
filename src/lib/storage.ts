@@ -1,5 +1,5 @@
 import { DEMO_MEMBERS, DEMO_SHOPPER } from "./data";
-import type { HouseholdState } from "./types";
+import { isUnverifiedLookup, type HouseholdState, type RecentScan } from "./types";
 
 const KEY = "foodwise-household-v1";
 
@@ -37,21 +37,26 @@ export function loadHousehold(): HouseholdState {
           typeof selected === "string" && demoIds.has(selected)
             ? selected
             : demoHousehold.selectedMemberId,
-        recentScans: Array.isArray(parsed.recentScans)
-          ? parsed.recentScans.filter((scan) => demoIds.has(scan.memberId))
-          : [],
+        recentScans: rememberedScans(parsed.recentScans).filter((scan) =>
+          demoIds.has(scan.memberId),
+        ),
       };
     }
     return {
       ...emptyHousehold,
       ...parsed,
       members: parsed.members,
-      recentScans: Array.isArray(parsed.recentScans) ? parsed.recentScans : [],
+      recentScans: rememberedScans(parsed.recentScans),
       source: "local",
     };
   } catch {
     return emptyHousehold;
   }
+}
+
+function rememberedScans(scans: RecentScan[] | undefined): RecentScan[] {
+  if (!Array.isArray(scans)) return [];
+  return scans.filter((scan) => !isUnverifiedLookup(scan.status));
 }
 
 export function saveHousehold(state: HouseholdState) {

@@ -14,7 +14,7 @@ import {
 import { useHousehold } from "@/context/HouseholdContext";
 import { computeVerdict, verdictHeadline } from "@/lib/engine";
 import { buildPrompts, explainOpening } from "@/lib/explain";
-import type { Product } from "@/lib/types";
+import { isUnverifiedLookup, type Product } from "@/lib/types";
 
 type Turn = { id: string; role: "user" | "app"; text: string };
 
@@ -86,7 +86,7 @@ export function ExplainView({ product }: { product: Product }) {
           {title}
         </h1>
         <p className="mt-1 text-[13px] text-ink-muted">
-          {product.name} · verdict locked by the rules engine
+          {isUnverifiedLookup(product.lookupStatus) ? product.barcode : product.name} · verdict locked by the rules engine
         </p>
       </div>
 

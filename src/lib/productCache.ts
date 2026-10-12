@@ -1,5 +1,5 @@
 import { PRODUCTS, getProduct } from "./data";
-import type { Product } from "./types";
+import { isUnverifiedLookup, type Product } from "./types";
 
 const KEY = "foodwise-scanned-products-v1";
 const memory = new Map<string, Product>();
@@ -10,7 +10,10 @@ function readCache(): Record<string, Product> {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, Product>;
-    return parsed && typeof parsed === "object" ? parsed : {};
+    if (!parsed || typeof parsed !== "object") return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([, product]) => !isUnverifiedLookup(product?.lookupStatus)),
+    );
   } catch {
     return {};
   }
@@ -19,6 +22,7 @@ function readCache(): Record<string, Product> {
 export function rememberProduct(product: Product) {
   if (typeof window === "undefined") return;
   memory.set(product.id, product);
+  if (isUnverifiedLookup(product.lookupStatus)) return;
   const cache = readCache();
   cache[product.id] = product;
   try {

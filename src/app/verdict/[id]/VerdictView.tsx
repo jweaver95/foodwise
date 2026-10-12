@@ -24,7 +24,7 @@ import {
 } from "@/context/HouseholdContext";
 import { getProduct } from "@/lib/data";
 import { computeVerdict, memberRestrictionLabels, restrictionLabel, ruleLine, verdictHeadline } from "@/lib/engine";
-import type { Product } from "@/lib/types";
+import { isUnverifiedLookup, type Product } from "@/lib/types";
 
 export function VerdictView({ product }: { product: Product }) {
   const router = useRouter();
@@ -63,6 +63,7 @@ export function VerdictView({ product }: { product: Product }) {
 
   const { kicker, title, detail } = verdictHeadline(verdict, selectedMember);
   const others = members.filter((member) => member.id !== selectedMember.id);
+  const unverified = isUnverifiedLookup(product.lookupStatus);
 
   return (
     <Screen>
@@ -82,15 +83,17 @@ export function VerdictView({ product }: { product: Product }) {
       <ScreenBody>
         <div className="bezel">
           <div className={`bezel-inner ${statusSurface[verdict.status]}`}>
-            <div className="relative h-[168px]">
-              <ProductPhoto
-                src={product.image}
-                alt=""
-                className="h-full w-full"
-                sizes="400px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-            </div>
+            {product.image ? (
+              <div className="relative h-[168px]">
+                <ProductPhoto
+                  src={product.image}
+                  alt=""
+                  className="h-full w-full"
+                  sizes="400px"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+              </div>
+            ) : null}
             <div className="px-5 pb-6 pt-5">
               <p className="text-[12px] font-semibold tracking-[0.12em] text-white/80 uppercase">
                 {kicker}
@@ -119,10 +122,10 @@ export function VerdictView({ product }: { product: Product }) {
           <Avatar member={selectedMember} />
           <div>
             <h2 className="text-[20px] font-bold tracking-[-0.02em]">
-              {product.name}
+              {unverified ? "No product on record" : product.name}
             </h2>
             <p className="font-mono text-[12px] text-ink-muted">
-              {product.brand} · {product.barcode}
+              {unverified ? product.barcode : `${product.brand} · ${product.barcode}`}
             </p>
           </div>
         </div>
@@ -251,9 +254,11 @@ export function VerdictView({ product }: { product: Product }) {
           <ButtonLink href={`/explain/${product.id}`}>
             Why this verdict
           </ButtonLink>
-          <ButtonLink tone="outline" href={`/product/${product.id}`}>
-            See all ingredients
-          </ButtonLink>
+          {product.ingredients.length > 0 ? (
+            <ButtonLink tone="outline" href={`/product/${product.id}`}>
+              See all ingredients
+            </ButtonLink>
+          ) : null}
           <Link
             href="/scan"
             className="block py-2 text-center text-[14px] font-medium text-ink-muted underline decoration-line underline-offset-4"
@@ -268,7 +273,7 @@ export function VerdictView({ product }: { product: Product }) {
 
       {reporting ? (
         <ReportErrorSheet
-          productName={product.name}
+          productName={unverified ? product.barcode : product.name}
           onClose={() => setReporting(false)}
         />
       ) : null}

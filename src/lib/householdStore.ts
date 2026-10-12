@@ -6,7 +6,12 @@ import {
   loadHousehold,
   saveHousehold,
 } from "./storage";
-import type { HouseholdMember, HouseholdState, RecentScan } from "./types";
+import {
+  isUnverifiedLookup,
+  type HouseholdMember,
+  type HouseholdState,
+  type RecentScan,
+} from "./types";
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -199,6 +204,7 @@ export function setShopperName(name: string) {
 }
 
 export function recordScan(scan: RecentScan) {
+  if (isUnverifiedLookup(scan.status)) return;
   mutate((current) => {
     const alreadyTop =
       current.recentScans[0]?.productId === scan.productId &&

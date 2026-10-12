@@ -5,7 +5,14 @@ import {
 import { recallProduct, rememberProduct } from "./productCache";
 import { emptyHousehold, loadHousehold } from "./storage";
 import { getSupabase } from "./supabase/browser";
-import type { HouseholdMember, HouseholdState, Product, RecentScan, VerdictStatus } from "./types";
+import {
+  isUnverifiedLookup,
+  type HouseholdMember,
+  type HouseholdState,
+  type Product,
+  type RecentScan,
+  type VerdictStatus,
+} from "./types";
 
 type MemberRow = {
   id: string;
@@ -88,7 +95,9 @@ export async function bootstrapAccount() {
     if (profileResult.error || memberResult.error || scanResult.error) return;
 
     const members = ((memberResult.data ?? []) as MemberRow[]).map(memberFromRow);
-    const scans = ((scanResult.data ?? []) as ScanRow[]).map(
+    const scans = ((scanResult.data ?? []) as ScanRow[])
+      .filter((scan) => !isUnverifiedLookup(scan.status))
+      .map(
       (scan): RecentScan => ({
         productId: /^\d{8,14}$/.test(scan.product_key)
           ? `barcode-${scan.product_key}`

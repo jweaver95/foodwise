@@ -35,10 +35,12 @@ function catalogProduct(
     disclosures?: Disclosure[];
   },
 ): Product {
+  const unidentified =
+    fields.lookupStatus === "UNKNOWN_PRODUCT" || fields.lookupStatus === "LOOKUP_FAILED";
   return {
     id: `barcode-${barcode}`,
-    name: fields.name || "Unnamed product",
-    brand: fields.brand || "Unknown brand",
+    name: fields.name || (unidentified ? "" : "Unnamed product"),
+    brand: fields.brand || (unidentified ? "" : "Unknown brand"),
     barcode,
     capture: "barcode",
     source: fields.source,
@@ -92,10 +94,10 @@ export async function GET(request: Request) {
   if (fresh && stored?.source === "not_found") {
     return Response.json({
       product: catalogProduct(barcode, {
-        name: "Unknown product",
-        brand: "Open Food Facts",
-        source: "Open Food Facts",
-        image: "/photos/welcome.png",
+        name: "",
+        brand: "",
+        source: "",
+        image: "",
         ingredients: [],
         lookupStatus: "UNKNOWN_PRODUCT",
       }),
@@ -161,10 +163,10 @@ export async function GET(request: Request) {
   if (!offReached && !ingredientText && !name) {
     return Response.json({
       product: catalogProduct(barcode, {
-        name: name || "Unreachable product",
-        brand: brand || "Open Food Facts",
-        source: "Open Food Facts",
-        image,
+        name: "",
+        brand: "",
+        source: "",
+        image: "",
         ingredients: [],
         lookupStatus: "LOOKUP_FAILED",
       }),
@@ -174,10 +176,10 @@ export async function GET(request: Request) {
   if (!offFound && !stored && !ingredientText) {
     return Response.json({
       product: catalogProduct(barcode, {
-        name: "Unknown product",
-        brand: "Open Food Facts",
-        source: "Open Food Facts",
-        image,
+        name: "",
+        brand: "",
+        source: "",
+        image: "",
         ingredients: [],
         lookupStatus: "UNKNOWN_PRODUCT",
       }),
