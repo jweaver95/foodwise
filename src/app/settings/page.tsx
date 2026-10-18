@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { Button, Screen, ScreenBody, SectionLabel } from "@/components/ui";
+import { Button, LEGAL_DISCLAIMER, Screen, ScreenBody, SectionLabel } from "@/components/ui";
 import { reset, useHousehold } from "@/context/HouseholdContext";
 import { signOutAccount } from "@/lib/account";
 
@@ -90,10 +90,7 @@ export default function SettingsPage() {
         <section className="mt-8">
           <SectionLabel>Limits</SectionLabel>
           <p className="max-w-[46ch] text-[14px] leading-relaxed text-ink-muted">
-            FoodWise is a decision aid, not a medical device, and not a substitute
-            for reading the label. It does not interpret cross-contamination
-            warnings, and it reports unknown rather than guessing when the
-            product is not found.
+            {LEGAL_DISCLAIMER}
           </p>
         </section>
 

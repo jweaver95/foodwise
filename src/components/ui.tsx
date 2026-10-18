@@ -48,7 +48,7 @@ export const LEGAL_DISCLAIMER =
 export function Disclaimer({ className = "" }: { className?: string }) {
   return (
     <p className={`text-center text-[11px] text-ink-muted ${className}`}>
-      Decision aid, not a medical device. Always read the label yourself.
+      Not medical advice.
     </p>
   );
 }
