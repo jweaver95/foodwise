@@ -268,7 +268,7 @@ export function classifyIngredients(
       label,
       unknown: true,
       plain:
-        "This ingredient is not in the FoodWise mapping table, so it is not treated as safe.",
+        "The product is not found, so it is not treated as safe.",
     };
   });
 

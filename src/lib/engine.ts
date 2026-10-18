@@ -150,7 +150,7 @@ export function verdictHeadline(
     return {
       kicker: "Unknown ingredient",
       title: `Not confirmed for ${member.name}`,
-      detail: `One ingredient is missing from the mapping table, so FoodWise will not call this safe.`,
+      detail: `The product is not found, so FoodWise will not call this safe.`,
     };
   }
 

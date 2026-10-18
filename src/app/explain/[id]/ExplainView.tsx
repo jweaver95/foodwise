@@ -2,14 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { ScanMark } from "@/components/ScanMark";
+import { OutcomeMark } from "@/components/OutcomeMark";
 import {
-  Badge,
   Disclaimer,
   Screen,
   ScreenFooter,
   VerdictDisclaimer,
-  statusBadgeTone,
-  statusShortLabel,
 } from "@/components/ui";
 import { useHousehold } from "@/context/HouseholdContext";
 import { computeVerdict, verdictHeadline } from "@/lib/engine";
@@ -72,20 +71,17 @@ export function ExplainView({ product }: { product: Product }) {
 
   return (
     <Screen>
-      <ScreenHeader
-        back
-        action={
-          <Badge tone={statusBadgeTone[verdict.status]}>
-            {statusShortLabel[verdict.status]}
-          </Badge>
-        }
-      />
+      <ScreenHeader back />
 
       <div className="shrink-0 border-b border-line px-5 pb-4">
-        <h1 className="text-[22px] font-bold leading-tight tracking-[-0.02em]">
-          {title}
-        </h1>
-        <p className="mt-1 text-[13px] text-ink-muted">
+        <div className="flex items-center gap-3">
+          <ScanMark />
+          <h1 className="min-w-0 flex-1 text-[22px] font-bold leading-tight tracking-[-0.02em]">
+            {title}
+          </h1>
+          <OutcomeMark status={verdict.status} className="w-[104px]" />
+        </div>
+        <p className="mt-1 ml-12 text-[13px] text-ink-muted">
           {isUnverifiedLookup(product.lookupStatus) ? product.barcode : product.name} · verdict locked by the rules engine
         </p>
       </div>

@@ -138,7 +138,7 @@ export const PRODUCTS: Product[] = [
         label: "Disodium ribonucleotide blend",
         unknown: true,
         plain:
-          "This processing blend is not in the FoodWise mapping table yet, so the engine will not guess.",
+          "The product is not found, so the engine will not guess.",
       },
     ],
   },

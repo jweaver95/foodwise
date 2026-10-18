@@ -45,8 +45,7 @@ export function explainOpening(
   }
 
   if (verdict.status === "UNKNOWN_INGREDIENT") {
-    const names = verdict.unknowns.map((item) => item.label);
-    return `${title}. Everything else in ${product.name} came back clear, but ${listToProse(names)} is not in the mapping table. FoodWise reports unknown instead of guessing.`;
+    return `${title}. Everything else in ${product.name} came back clear, but the product is not found. FoodWise reports unknown instead of guessing.`;
   }
 
   return `${title}. The engine checked all ${product.ingredients.length} ingredients against ${member.name}'s profile and none of them matched.`;
@@ -97,7 +96,7 @@ export function buildPrompts(
     prompts.push({
       id: `unknown-${unknown.id}`,
       question: `Why is ${unknown.label} unknown?`,
-      answer: `${unknown.plain ?? "This ingredient has no entry in the mapping table."} An unknown is not a pass. Read the panel on the package before you decide, and report it so the table can be corrected.`,
+      answer: `${unknown.plain ?? "The product is not found."} An unknown is not a pass. Read the panel on the package before you decide, and report it so the record can be corrected.`,
     });
   }
 

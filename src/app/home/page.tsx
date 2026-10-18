@@ -6,7 +6,8 @@ import { useEffect, useMemo } from "react";
 import { GearSix, Plus } from "@phosphor-icons/react/dist/ssr";
 import { Avatar } from "@/components/Avatar";
 import { ProductPhoto } from "@/components/ProductPhoto";
-import { Disclaimer, Screen, ScreenBody, StatusPill } from "@/components/ui";
+import { OutcomeMark } from "@/components/OutcomeMark";
+import { Disclaimer, Screen, ScreenBody } from "@/components/ui";
 import { selectMember, useHousehold } from "@/context/HouseholdContext";
 import { memberRestrictionLabels } from "@/lib/engine";
 import { greetingFor } from "@/lib/greeting";
@@ -206,7 +207,7 @@ export default function HomePage() {
                           For {scan.memberName}
                         </span>
                       </span>
-                      <StatusPill status={scan.status} />
+                      <OutcomeMark status={scan.status} className="w-[92px]" />
                     </Link>
                   </li>
                 );

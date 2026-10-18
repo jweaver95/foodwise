@@ -299,7 +299,7 @@ export default function ScanPage() {
                   {message ??
                     (uncertain
                       ? "This reading looks uncertain. Correct it against the package, or retake."
-                      : "Correct anything the camera misread. An ingredient that is not in the mapping table stays unknown.")}
+                      : "Correct anything the camera misread. If the product is not found, it stays unknown.")}
                 </p>
                 <textarea
                   id="panel-reading"

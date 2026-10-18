@@ -12,7 +12,7 @@ const BUILD_NOTES = [
   {
     term: "Ingredient data",
     detail:
-      "A barcode looks the product up in Open Food Facts. A panel photo is read on this device, then you confirm the words. Either way, the mapping table decides, and a name that is not in that table stays unknown.",
+      "A barcode looks the product up in Open Food Facts. A panel photo is read on this device, then you confirm the words. Either way, the mapping table decides, and if the product is not found it stays unknown.",
   },
   {
     term: "Safety verdict",
@@ -92,8 +92,8 @@ export default function SettingsPage() {
           <p className="max-w-[46ch] text-[14px] leading-relaxed text-ink-muted">
             FoodWise is a decision aid, not a medical device, and not a substitute
             for reading the label. It does not interpret cross-contamination
-            warnings, and it reports unknown rather than guessing when an
-            ingredient is missing from the mapping table.
+            warnings, and it reports unknown rather than guessing when the
+            product is not found.
           </p>
         </section>
 

@@ -7,13 +7,14 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import { ReportErrorSheet } from "@/components/ReportErrorSheet";
 import { Avatar } from "@/components/Avatar";
 import { ProductPhoto } from "@/components/ProductPhoto";
+import { OutcomeMark } from "@/components/OutcomeMark";
+import { ScanMark } from "@/components/ScanMark";
 import {
   Badge,
   ButtonLink,
   Disclaimer,
   Screen,
   ScreenBody,
-  StatusPill,
   VerdictDisclaimer,
   statusSurface,
 } from "@/components/ui";
@@ -92,18 +93,23 @@ export function VerdictView({ product }: { product: Product }) {
                   sizes="400px"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+                <ScanMark className="absolute left-3.5 top-3.5" />
               </div>
             ) : null}
-            <div className="px-5 pb-6 pt-5">
-              <p className="text-[12px] font-semibold tracking-[0.12em] text-white/80 uppercase">
-                {kicker}
-              </p>
-              <h1 className="mt-2 text-[34px] font-bold leading-[1.05] tracking-[-0.03em] text-wrap-balance">
-                {title}
-              </h1>
-              <p className="mt-3 max-w-[36ch] text-[15px] leading-relaxed text-white/88">
-                {detail}
-              </p>
+            <div className="flex items-end gap-3 px-5 pb-5 pt-5">
+              <div className="min-w-0 flex-1">
+                {product.image ? null : <ScanMark className="mb-3" />}
+                <p className="text-[12px] font-semibold tracking-[0.12em] text-white/80 uppercase">
+                  {kicker}
+                </p>
+                <h1 className="mt-2 text-[34px] font-bold leading-[1.05] tracking-[-0.03em] text-wrap-balance">
+                  {title}
+                </h1>
+                <p className="mt-3 text-[15px] leading-relaxed text-white/88">
+                  {detail}
+                </p>
+              </div>
+              <OutcomeMark status={verdict.status} />
             </div>
           </div>
         </div>
@@ -175,7 +181,7 @@ export function VerdictView({ product }: { product: Product }) {
         {verdict.unknowns.length > 0 ? (
           <section className="mt-7">
             <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
-              Not in the mapping table
+              Product is not found
             </p>
             <div className="space-y-2">
               {verdict.unknowns.map((ingredient) => (
@@ -241,7 +247,7 @@ export function VerdictView({ product }: { product: Product }) {
                           Tap to read this for {member.name}
                         </span>
                       </span>
-                      <StatusPill status={theirs.status} />
+                      <OutcomeMark status={theirs.status} className="w-[92px]" />
                     </button>
                   </li>
                 );
