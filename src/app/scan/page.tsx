@@ -7,6 +7,7 @@ import { Barcode, ImageSquare, X } from "@phosphor-icons/react/dist/ssr";
 import { ProductPhoto } from "@/components/ProductPhoto";
 import { Button, Screen } from "@/components/ui";
 import { useHousehold } from "@/context/HouseholdContext";
+import { normalizeBarcode } from "@/lib/barcode";
 import { PRODUCTS, SAMPLE_SCAN_ORDER } from "@/lib/data";
 import { panelReadingQuality } from "@/lib/panelText";
 import { rememberProduct } from "@/lib/productCache";
@@ -15,6 +16,8 @@ import type { Product } from "@/lib/types";
 
 type Mode = "barcode" | "ocr";
 type Phase = "idle" | "live" | "reading" | "review";
+
+const TYPE_IN_AFTER_MS = 30_000;
 
 const SAMPLES = SAMPLE_SCAN_ORDER.map(
   (id) => PRODUCTS.find((product) => product.id === id)!,
@@ -47,6 +50,8 @@ export default function ScanPage() {
   const [shot, setShot] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [uncertain, setUncertain] = useState(false);
+  const [typeIn, setTypeIn] = useState(false);
+  const [typed, setTyped] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoNode, setVideoNode] = useState<HTMLVideoElement | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -118,6 +123,12 @@ export default function ScanPage() {
       controls?.stop();
     };
   }, [mode, phase, lookup, videoNode]);
+
+  useEffect(() => {
+    if (mode !== "barcode" || phase !== "live" || typeIn) return;
+    const timer = window.setTimeout(() => setTypeIn(true), TYPE_IN_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [mode, phase, typeIn]);
 
   useEffect(() => {
     if (mode !== "ocr" || phase !== "live" || !videoNode) return;
@@ -256,6 +267,17 @@ export default function ScanPage() {
     setShot(null);
     setDraft("");
     setUncertain(false);
+    setTypeIn(false);
+    setTyped("");
+  }
+
+  function submitTypedBarcode() {
+    const read = normalizeBarcode(typed);
+    if (!read.ok) {
+      setMessage("That number is not a complete barcode. Check the digits under the bars.");
+      return;
+    }
+    void lookup(read.barcode);
   }
 
   const reviewing = phase === "review";
@@ -360,7 +382,9 @@ export default function ScanPage() {
                 <p className="mt-2 max-w-[32ch] text-center text-[13px] leading-relaxed text-white/55">
                   {message ??
                     (mode === "barcode"
-                      ? "Point the rear camera at a barcode. Unknown ingredients stay unknown."
+                      ? typeIn
+                        ? "The bars are still hard to catch. Type the number printed under them."
+                        : "Point the rear camera at a barcode. Unknown ingredients stay unknown."
                       : "Photograph the ingredient list, not the front of the package. You confirm the words before a verdict.")}
                 </p>
               </>
@@ -458,6 +482,40 @@ export default function ScanPage() {
               </>
             ) : (
               <>
+                {mode === "barcode" && typeIn && !reading ? (
+                  <form
+                    className="mb-4"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      submitTypedBarcode();
+                    }}
+                  >
+                    <label htmlFor="typed-barcode" className="block text-[14px] font-semibold text-white">
+                      Type the barcode
+                    </label>
+                    <input
+                      id="typed-barcode"
+                      value={typed}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      enterKeyHint="search"
+                      placeholder="Digits under the bars"
+                      onChange={(event) => {
+                        setTyped(event.target.value.replace(/\D/g, "").slice(0, 14));
+                        setMessage(null);
+                      }}
+                      className="mt-2 w-full rounded-full bg-white/10 px-5 py-3.5 text-center font-mono text-[18px] tracking-[0.08em] text-white outline-none ring-1 ring-white/15 placeholder:text-white/35"
+                    />
+                    <Button
+                      type="submit"
+                      tone="light"
+                      className="mt-3"
+                      disabled={typed.length < 8}
+                    >
+                      Look up this barcode
+                    </Button>
+                  </form>
+                ) : null}
                 {mode === "barcode" ? (
                   <Button
                     tone="light"
