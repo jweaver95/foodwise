@@ -1,4 +1,4 @@
-import { classifyIngredients } from "@/lib/classify";
+import { allergenMatchNames, classifyIngredients } from "@/lib/classify";
 import { catalogClient, loadIngredientCatalog } from "@/lib/catalog";
 import { cleanPanelText } from "@/lib/panelText";
 import type { Product } from "@/lib/types";
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
     return Response.json({ error: mapping.error }, { status: mapping.status });
   }
 
+  const ingredients = classifyIngredients(text, mapping.catalog.terms, mapping.catalog.categories);
   const product: Product = {
     id: panelProductId(text),
     name: "Ingredient panel",
@@ -56,7 +57,8 @@ export async function POST(request: Request) {
     capture: "ocr",
     source: "Photo of ingredient panel",
     image: "/photos/welcome.png",
-    ingredients: classifyIngredients(text, mapping.catalog.terms, mapping.catalog.categories),
+    ingredients,
+    allergenMatches: allergenMatchNames(ingredients),
   };
 
   return Response.json({ product });

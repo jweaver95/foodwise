@@ -1,5 +1,5 @@
 import { barcodeCandidates, normalizeBarcode } from "@/lib/barcode";
-import { classifyIngredients } from "@/lib/classify";
+import { allergenMatchNames, classifyIngredients } from "@/lib/classify";
 import { catalogClient, loadIngredientCatalog } from "@/lib/catalog";
 import type { Disclosure, Product } from "@/lib/types";
 
@@ -31,6 +31,7 @@ function catalogProduct(
     source: string;
     image: string;
     ingredients: Product["ingredients"];
+    allergenMatches?: string[];
     lookupStatus?: Product["lookupStatus"];
     disclosures?: Disclosure[];
   },
@@ -46,6 +47,7 @@ function catalogProduct(
     source: fields.source,
     image: fields.image,
     ingredients: fields.ingredients,
+    allergenMatches: fields.allergenMatches,
     lookupStatus: fields.lookupStatus,
     disclosures: fields.disclosures,
   };
@@ -203,6 +205,7 @@ export async function GET(request: Request) {
   const matchedDisclosures = prop65Result.error
     ? []
     : disclosuresFrom(prop65Result.data, ingredientText);
+  const ingredients = classifyIngredients(ingredientText, terms, categories, allergenTags);
 
   return Response.json({
     product: catalogProduct(barcode, {
@@ -210,7 +213,8 @@ export async function GET(request: Request) {
       brand,
       source,
       image,
-      ingredients: classifyIngredients(ingredientText, terms, categories, allergenTags),
+      ingredients,
+      allergenMatches: allergenMatchNames(ingredients),
       disclosures: matchedDisclosures.length > 0 ? matchedDisclosures : disclosures,
     }),
   });

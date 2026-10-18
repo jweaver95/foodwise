@@ -136,6 +136,21 @@ export function VerdictView({ product }: { product: Product }) {
           </div>
         </div>
 
+        {product.allergenMatches && product.allergenMatches.length > 0 ? (
+          <section className="mt-6">
+            <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
+              Found in this product
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {product.allergenMatches.map((name) => (
+                <Badge key={name}>
+                  {name.replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                </Badge>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {product.disclosures && product.disclosures.length > 0 ? (
           <section className="mt-7 rounded-[22px] bg-surface p-4 ring-1 ring-ink/6">
             <p className="text-[12px] font-semibold tracking-[0.12em] text-ink-muted uppercase">

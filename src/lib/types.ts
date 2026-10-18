@@ -67,6 +67,8 @@ export type Product = {
   source: string;
   image: string;
   ingredients: Ingredient[];
+  /** Every mapping-table category found on this product, including ones outside the selected profile. */
+  allergenMatches?: string[];
   /** Set when the catalog itself cannot support a pass, before any member is compared. */
   lookupStatus?: LookupStatus;
   /** Label notices such as Prop 65. They never change the verdict. */
