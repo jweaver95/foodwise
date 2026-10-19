@@ -17,7 +17,7 @@ import type { Product } from "@/lib/types";
 type Mode = "barcode" | "ocr";
 type Phase = "idle" | "live" | "reading" | "review";
 
-const TYPE_IN_AFTER_MS = 30_000;
+const TYPE_IN_AFTER_MS = 20_000;
 
 const SAMPLES = SAMPLE_SCAN_ORDER.map(
   (id) => PRODUCTS.find((product) => product.id === id)!,
