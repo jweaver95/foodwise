@@ -11,6 +11,7 @@ import { OutcomeMark } from "@/components/OutcomeMark";
 import { ScanMark } from "@/components/ScanMark";
 import {
   Badge,
+  Button,
   ButtonLink,
   Disclaimer,
   Screen,
@@ -25,12 +26,23 @@ import {
 } from "@/context/HouseholdContext";
 import { getProduct } from "@/lib/data";
 import { computeVerdict, memberRestrictionLabels, restrictionLabel, ruleLine, verdictHeadline } from "@/lib/engine";
+import { dishesAvoiding } from "@/lib/kitchen";
+import {
+  noSwapLine,
+  productContainsLine,
+  swapsForMember,
+  swapTryLine,
+  type IngredientSwap,
+} from "@/lib/swaps";
 import { isUnverifiedLookup, type Product } from "@/lib/types";
 
 export function VerdictView({ product }: { product: Product }) {
   const router = useRouter();
-  const { hydrated, selectedMember, members, source } = useHousehold();
+  const { hydrated, ready, selectedMember, members, source } = useHousehold();
   const [reporting, setReporting] = useState(false);
+  const [swaps, setSwaps] = useState<IngredientSwap[]>([]);
+  const [swapsReady, setSwapsReady] = useState(false);
+  const [mealsOpen, setMealsOpen] = useState(false);
 
   const verdict = useMemo(
     () => (selectedMember ? computeVerdict(product, selectedMember) : null),
@@ -38,7 +50,7 @@ export function VerdictView({ product }: { product: Product }) {
   );
 
   useEffect(() => {
-    if (!selectedMember || !verdict) return;
+    if (!ready || !selectedMember || !verdict) return;
     recordScan({
       productId: product.id,
       memberId: selectedMember.id,
@@ -46,13 +58,37 @@ export function VerdictView({ product }: { product: Product }) {
       status: verdict.status,
       at: Date.now(),
     });
-  }, [product.id, selectedMember, verdict]);
+  }, [ready, product.id, selectedMember, verdict]);
+
+  useEffect(() => {
+    if (!ready || !verdict || verdict.hits.length === 0) {
+      setSwapsReady(true);
+      return;
+    }
+    let cancelled = false;
+    setSwapsReady(false);
+    void fetch("/api/swaps")
+      .then((response) => response.json() as Promise<{ swaps?: IngredientSwap[] }>)
+      .then((body) => {
+        if (cancelled) return;
+        setSwaps(body.swaps ?? []);
+        setSwapsReady(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSwaps([]);
+        setSwapsReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, verdict]);
 
   useEffect(() => {
     if (hydrated && !selectedMember) router.replace("/");
   }, [hydrated, selectedMember, router]);
 
-  if (!selectedMember || !verdict) {
+  if (!ready || !selectedMember || !verdict) {
     return (
       <Screen>
         <div className="flex flex-1 items-center justify-center px-6">
@@ -65,6 +101,11 @@ export function VerdictView({ product }: { product: Product }) {
   const { kicker, title, detail } = verdictHeadline(verdict, selectedMember);
   const others = members.filter((member) => member.id !== selectedMember.id);
   const unverified = isUnverifiedLookup(product.lookupStatus);
+  const ideas = swapsForMember(swaps, product, selectedMember);
+  const allergens = [
+    ...new Set(verdict.hits.map((hit) => restrictionLabel(hit).toLowerCase())),
+  ];
+  const mealIdeas = dishesAvoiding(allergens);
 
   return (
     <Screen>
@@ -168,16 +209,13 @@ export function VerdictView({ product }: { product: Product }) {
         ) : null}
 
         {verdict.hits.length > 0 ? (
-          <section className="mt-7">
-            <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
+          <section className="mt-7 rounded-[28px] bg-fail px-4 py-5 text-white shadow-[0_16px_32px_rgb(180_35_24/0.22)]">
+            <p className="text-[18px] font-semibold tracking-[-0.01em]">
               What triggered this
             </p>
-            <div className="space-y-2">
+            <div className="mt-4 space-y-2">
               {verdict.hits.map((hit) => (
-                <div
-                  key={hit.ingredient.id}
-                  className="rounded-[22px] bg-surface p-4 shadow-[var(--shadow-card)] ring-1 ring-ink/6"
-                >
+                <div key={hit.ingredient.id} className="rounded-[20px] bg-paper px-4 py-3.5 text-ink">
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-[17px] font-semibold leading-snug">
                       {hit.ingredient.label}
@@ -190,6 +228,71 @@ export function VerdictView({ product }: { product: Product }) {
                 </div>
               ))}
             </div>
+          </section>
+        ) : null}
+
+        {ideas.length > 0 ? (
+          <section className="mt-7 rounded-[28px] bg-forest px-4 py-5 text-white shadow-[0_16px_32px_rgb(22_63_48/0.22)]">
+            <p className="text-[18px] font-semibold tracking-[-0.01em]">Try instead</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-white/75">
+              {productContainsLine(allergens)}
+            </p>
+            <div className="mt-4 space-y-2">
+              {ideas.map((idea) => (
+                <div key={idea.id} className="rounded-[20px] bg-paper px-4 py-3.5 text-ink">
+                  <p className="text-[17px] font-semibold leading-snug">{idea.swapLabel}</p>
+                  <p className="mt-1 text-[14px] leading-relaxed text-ink-muted">{swapTryLine(idea)}</p>
+                  {idea.note ? (
+                    <p className="mt-2 text-[14px] leading-relaxed text-ink-muted">{idea.note}</p>
+                  ) : null}
+                  {idea.source ? (
+                    <p className="mt-2 text-[12px] text-ink-muted">Sources: {idea.source}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-[14px] leading-relaxed text-white/75">
+              Scan one before you decide.
+            </p>
+            <ButtonLink href="/scan" tone="light" className="mt-4">
+              Scan a substitute
+            </ButtonLink>
+          </section>
+        ) : swapsReady && verdict.hits.length > 0 ? (
+          <section className="mt-7 rounded-[22px] bg-surface p-4 ring-1 ring-ink/6">
+            <p className="text-[15px] leading-relaxed">{noSwapLine(allergens)}</p>
+          </section>
+        ) : null}
+
+        {mealIdeas.length > 0 ? (
+          <section className="mt-7">
+            <Button
+              tone="forest"
+              aria-expanded={mealsOpen}
+              onClick={() => setMealsOpen((open) => !open)}
+              className="shadow-[0_12px_24px_rgb(22_63_48/0.28)]"
+            >
+              Meal suggestions
+            </Button>
+            {mealsOpen ? (
+              <div className="mt-3">
+                <p className="text-[15px] leading-relaxed text-ink-muted">
+                  Meals from the approved menu that leave this out. Read the label before you cook.
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {mealIdeas.map((dish) => (
+                    <li key={dish.id}>
+                      <Link
+                        href={`/dishes/${dish.id}`}
+                        className="block rounded-[20px] bg-surface px-4 py-3 text-[16px] font-semibold ring-1 ring-ink/6"
+                      >
+                        {dish.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </section>
         ) : null}
 
@@ -238,6 +341,23 @@ export function VerdictView({ product }: { product: Product }) {
           </div>
         </section>
 
+        <div className="mt-8 space-y-3">
+          <ButtonLink href={`/explain/${product.id}`}>
+            Why this verdict
+          </ButtonLink>
+          {product.ingredients.length > 0 ? (
+            <ButtonLink tone="outline" href={`/product/${product.id}`}>
+              See all ingredients
+            </ButtonLink>
+          ) : null}
+          <Link
+            href="/scan"
+            className="block py-2 text-center text-[14px] font-medium text-ink-muted underline decoration-line underline-offset-4"
+          >
+            Scan another product
+          </Link>
+        </div>
+
         {others.length > 0 ? (
           <section className="mt-7">
             <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
@@ -270,23 +390,6 @@ export function VerdictView({ product }: { product: Product }) {
             </ul>
           </section>
         ) : null}
-
-        <div className="mt-8 space-y-3">
-          <ButtonLink href={`/explain/${product.id}`}>
-            Why this verdict
-          </ButtonLink>
-          {product.ingredients.length > 0 ? (
-            <ButtonLink tone="outline" href={`/product/${product.id}`}>
-              See all ingredients
-            </ButtonLink>
-          ) : null}
-          <Link
-            href="/scan"
-            className="block py-2 text-center text-[14px] font-medium text-ink-muted underline decoration-line underline-offset-4"
-          >
-            Scan another product
-          </Link>
-        </div>
 
         <VerdictDisclaimer className="mt-6" />
         <Disclaimer className="mt-3" />

@@ -57,7 +57,13 @@ export function TabBar() {
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const tabbed = path === "/home" || path === "/household" || path === "/settings";
+  const tabbed =
+    path === "/home" ||
+    path === "/household" ||
+    path === "/settings" ||
+    path === "/dishes" ||
+    path.startsWith("/dishes/") ||
+    path === "/resources";
 
   return (
     <>

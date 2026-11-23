@@ -1,3 +1,4 @@
+import { withDemoCategories } from "./demoCategories";
 import {
   householdStore,
   hydrateHousehold,
@@ -58,6 +59,20 @@ function memberFromRow(row: MemberRow): HouseholdMember {
   };
 }
 
+async function attachDemoCategories() {
+  const current = householdStore.getSnapshot();
+  if (current.source !== "demo") return;
+  try {
+    const categories = await loadCategories();
+    hydrateHousehold({
+      ...current,
+      members: withDemoCategories(current.members, categories),
+    });
+  } catch {
+    // The sample household still works for the built-in cards.
+  }
+}
+
 export async function bootstrapAccount() {
   try {
     const supabase = getSupabase();
@@ -66,6 +81,8 @@ export async function bootstrapAccount() {
       householdStore.setAccountUser(null);
       if (householdStore.getSnapshot().source === "account") {
         hydrateHousehold(emptyHousehold);
+      } else if (householdStore.getSnapshot().source === "demo") {
+        await attachDemoCategories();
       }
       return;
     }

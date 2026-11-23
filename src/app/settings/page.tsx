@@ -88,6 +88,33 @@ export default function SettingsPage() {
         </section>
 
         <section className="mt-8">
+          <SectionLabel>Kitchen</SectionLabel>
+          <div className="divide-y divide-line border-y border-line">
+            <Link href="/dishes" className="flex items-center gap-3 py-4">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[16px] font-semibold">Approved dishes</span>
+                <span className="mt-0.5 block text-[13px] text-ink-muted">
+                  This week’s menu
+                </span>
+              </span>
+              <CaretRight size={18} className="shrink-0 text-ink-muted" />
+            </Link>
+          </div>
+          <Link
+            href="/resources"
+            className="mt-4 block rounded-[28px] bg-forest px-4 py-5 text-white shadow-[0_16px_32px_rgb(22_63_48/0.22)]"
+          >
+            <span className="block text-[18px] font-semibold tracking-[-0.01em]">Resources</span>
+            <span className="mt-1 block text-[14px] leading-relaxed text-white/75">
+              Three cookbooks. Reading, not a verdict.
+            </span>
+            <span className="mt-4 flex min-h-[56px] items-center justify-center rounded-full bg-white px-6 text-[15px] font-semibold text-forest">
+              See the cookbooks
+            </span>
+          </Link>
+        </section>
+
+        <section className="mt-8">
           <SectionLabel>Limits</SectionLabel>
           <p className="max-w-[46ch] text-[14px] leading-relaxed text-ink-muted">
             {LEGAL_DISCLAIMER}

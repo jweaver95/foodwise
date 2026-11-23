@@ -146,6 +146,7 @@ export async function loadIngredientCatalog(
     for (const category of linked) {
       terms.push({
         ...shared,
+        ingredientId: row.ingredient_id,
         categoryId: category.id,
         categoryName: category.name,
         categoryType: category.categoryType,

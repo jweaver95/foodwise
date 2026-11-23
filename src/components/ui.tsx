@@ -61,13 +61,14 @@ export function VerdictDisclaimer({ className = "" }: { className?: string }) {
   );
 }
 
-type ButtonTone = "primary" | "outline" | "danger" | "light";
+type ButtonTone = "primary" | "outline" | "danger" | "light" | "forest";
 
 const buttonTones: Record<ButtonTone, string> = {
   primary: "bg-ink text-paper",
   outline: "border border-line bg-transparent text-ink",
   danger: "bg-fail text-white",
   light: "bg-white text-forest",
+  forest: "bg-forest text-white",
 };
 
 const buttonBase =

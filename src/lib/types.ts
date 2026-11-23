@@ -52,6 +52,8 @@ export type Ingredient = {
   categoryId?: number;
   categoryName?: string;
   categoryType?: "allergen" | "additive";
+  /** Catalog ingredient id, used to find an approved swap. */
+  ingredientId?: number;
   /** True when the mapping table has no entry, so safety cannot be computed. */
   unknown?: boolean;
   /** Plain-language translation of a technical name. */

@@ -170,6 +170,32 @@ export default function HomePage() {
           </div>
 
         <section className="mt-8">
+          <p className="mb-3 text-[18px] font-semibold tracking-[-0.01em]">
+            For the kitchen
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/dishes"
+              className="rounded-[22px] bg-surface p-4 shadow-[var(--shadow-card)] ring-1 ring-ink/6"
+            >
+              <p className="text-[16px] font-semibold leading-snug">Approved dishes</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
+                Six meals and a birthday cake
+              </p>
+            </Link>
+            <Link
+              href="/resources"
+              className="rounded-[22px] bg-forest p-4 text-white shadow-[0_12px_24px_rgb(22_63_48/0.22)]"
+            >
+              <p className="text-[16px] font-semibold leading-snug">Cookbooks</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/75">
+                Three books for this kitchen
+              </p>
+            </Link>
+          </div>
+        </section>
+
+        <section className="mt-8">
           <div className="mb-3 flex items-end justify-between">
             <p className="text-[18px] font-semibold tracking-[-0.01em]">
               Recent checks

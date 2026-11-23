@@ -12,6 +12,8 @@ export type CatalogTerm = {
   categoryId?: number;
   categoryName?: string;
   categoryType?: "allergen" | "additive";
+  /** Catalog ingredient behind this alias, when the swap table needs it. */
+  ingredientId?: number;
   wholeWord?: boolean;
   exceptions?: string[];
 };
@@ -266,6 +268,7 @@ function mappedIngredient(
   index: number,
   category: CatalogCategory,
   plain: string,
+  ingredientId?: number,
 ): Ingredient {
   return {
     id: slug(label, index),
@@ -273,6 +276,7 @@ function mappedIngredient(
     categoryId: category.id,
     categoryName: category.name,
     categoryType: category.categoryType,
+    ingredientId,
     plain,
   };
 }
@@ -314,6 +318,7 @@ export function classifyIngredients(
             ingredients.length,
             category,
             `${presentName(term.technicalName)} is in the mapping table as ${category.name}.`,
+            term.ingredientId,
           ),
         );
       }

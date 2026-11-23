@@ -12,6 +12,12 @@ import { PRODUCTS, SAMPLE_SCAN_ORDER } from "@/lib/data";
 import { panelReadingQuality } from "@/lib/panelText";
 import { rememberProduct } from "@/lib/productCache";
 import { readIngredientPanel } from "@/lib/readPanel";
+import {
+  createAndroidDetector,
+  detectStillBarcode,
+  openScanStream,
+  retailDigits,
+} from "@/lib/scanCamera";
 import type { Product } from "@/lib/types";
 
 type Mode = "barcode" | "ocr";
@@ -22,15 +28,6 @@ const TYPE_IN_AFTER_MS = 20_000;
 const SAMPLES = SAMPLE_SCAN_ORDER.map(
   (id) => PRODUCTS.find((product) => product.id === id)!,
 );
-
-const REAR_CAMERA: MediaStreamConstraints = {
-  audio: false,
-  video: {
-    facingMode: { ideal: "environment" },
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
-  },
-};
 
 function cameraErrorMessage(): string {
   if (typeof window !== "undefined" && !window.isSecureContext) {
@@ -96,31 +93,74 @@ export default function ScanPage() {
 
     let stopped = false;
     let controls: IScannerControls | undefined;
-    const reader = new BrowserMultiFormatReader();
+    let stream: MediaStream | undefined;
+    let timer = 0;
 
-    void reader
-      .decodeFromConstraints(REAR_CAMERA, video, (result) => {
-        if (stopped || !result) return;
-        const code = result.getText().replace(/\D/g, "");
-        if (code.length < 8 || code.length > 14) return;
-        stopped = true;
-        controls?.stop();
-        void lookup(code);
-      })
-      .then((next) => {
-        controls = next;
-        if (stopped) next.stop();
-      })
-      .catch(() => {
-        if (stopped) return;
-        setCameraBlocked(true);
-        setPhase("idle");
-        setMessage(cameraErrorMessage());
+    const finish = (raw: string) => {
+      if (stopped || !retailDigits(raw)) return;
+      stopped = true;
+      window.clearTimeout(timer);
+      controls?.stop();
+      stream?.getTracks().forEach((track) => track.stop());
+      void lookup(retailDigits(raw) ?? raw);
+    };
+
+    void (async () => {
+      const [opened, detector] = await Promise.all([openScanStream(), createAndroidDetector()]);
+      stream = opened;
+      if (stopped) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      if (detector) {
+        video.dataset.reader = "android";
+        video.srcObject = stream;
+        await video.play();
+        const scan = async () => {
+          if (stopped) return;
+          try {
+            if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+              const codes = await detector.detect(video);
+              const hit = codes.find((code) => retailDigits(code.rawValue));
+              if (hit?.rawValue) {
+                finish(hit.rawValue);
+                return;
+              }
+            }
+          } catch {
+            // One missed frame leaves the camera running.
+          }
+          if (!stopped) timer = window.setTimeout(() => void scan(), 140);
+        };
+        void scan();
+        return;
+      }
+
+      video.dataset.reader = "zxing";
+      const reader = new BrowserMultiFormatReader();
+      controls = await reader.decodeFromStream(stream, video, (result) => {
+        if (!result) return;
+        finish(result.getText());
       });
+      if (stopped) controls.stop();
+    })().catch(() => {
+      if (stopped) return;
+      stream?.getTracks().forEach((track) => track.stop());
+      setCameraBlocked(true);
+      setPhase("idle");
+      setMessage(cameraErrorMessage());
+    });
 
     return () => {
       stopped = true;
+      window.clearTimeout(timer);
       controls?.stop();
+      stream?.getTracks().forEach((track) => track.stop());
+      if (video.srcObject instanceof MediaStream) {
+        video.srcObject.getTracks().forEach((track) => track.stop());
+        video.srcObject = null;
+      }
     };
   }, [mode, phase, lookup, videoNode]);
 
@@ -137,13 +177,7 @@ export default function ScanPage() {
     let cancelled = false;
     let stream: MediaStream | undefined;
 
-    void Promise.resolve()
-      .then(() => {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error("Camera unavailable");
-        }
-        return navigator.mediaDevices.getUserMedia(REAR_CAMERA);
-      })
+    void openScanStream()
       .then((next) => {
         if (cancelled) {
           next.getTracks().forEach((track) => track.stop());
@@ -238,10 +272,16 @@ export default function ScanPage() {
       setPhase("reading");
       const url = URL.createObjectURL(file);
       try {
-        const reader = new BrowserMultiFormatReader();
-        const result = await reader.decodeFromImageUrl(url);
+        const image = new Image();
+        image.src = url;
+        const native = await image
+          .decode()
+          .then(() => detectStillBarcode(image))
+          .catch(() => null);
+        const text =
+          native ?? (await new BrowserMultiFormatReader().decodeFromImageUrl(url)).getText();
         if (!alive.current) return;
-        await lookup(result.getText());
+        await lookup(text);
       } catch {
         if (!alive.current) return;
         setPhase("idle");
@@ -272,9 +312,13 @@ export default function ScanPage() {
   }
 
   function submitTypedBarcode() {
+    if (typed.length < 12) {
+      setMessage("Enter all 12 digits.");
+      return;
+    }
     const read = normalizeBarcode(typed);
     if (!read.ok) {
-      setMessage("That number is not a complete barcode. Check the digits under the bars.");
+      setMessage("Enter all 12 digits printed under the bars.");
       return;
     }
     void lookup(read.barcode);
@@ -383,7 +427,7 @@ export default function ScanPage() {
                   {message ??
                     (mode === "barcode"
                       ? typeIn
-                        ? "The bars are still hard to catch. Type the number printed under them."
+                        ? "Enter all 12 digits printed under the bars."
                         : "Point the rear camera at a barcode. Unknown ingredients stay unknown."
                       : "Photograph the ingredient list, not the front of the package. You confirm the words before a verdict.")}
                 </p>
@@ -493,13 +537,16 @@ export default function ScanPage() {
                     <label htmlFor="typed-barcode" className="block text-[14px] font-semibold text-white">
                       Type the barcode
                     </label>
+                    <p className="mt-1 text-[13px] leading-relaxed text-white/70">
+                      Enter all 12 digits.
+                    </p>
                     <input
                       id="typed-barcode"
                       value={typed}
                       inputMode="numeric"
                       autoComplete="off"
                       enterKeyHint="search"
-                      placeholder="Digits under the bars"
+                      placeholder="12 digits"
                       onChange={(event) => {
                         setTyped(event.target.value.replace(/\D/g, "").slice(0, 14));
                         setMessage(null);
@@ -510,7 +557,7 @@ export default function ScanPage() {
                       type="submit"
                       tone="light"
                       className="mt-3"
-                      disabled={typed.length < 8}
+                      disabled={typed.length < 12}
                     >
                       Look up this barcode
                     </Button>
