@@ -1,4 +1,4 @@
-import { barcodeCandidates, normalizeBarcode } from "@/lib/barcode";
+import { matchBarcode } from "@/lib/barcode";
 import { allergenMatchNames, classifyIngredients } from "@/lib/classify";
 import { catalogClient, loadIngredientCatalog } from "@/lib/catalog";
 import type { Disclosure, Product } from "@/lib/types";
@@ -16,6 +16,19 @@ type StoredProduct = {
   last_synced_at: string | null;
   off_allergen_tags: string[] | null;
 };
+
+function hasCatalogRow(row: StoredProduct): boolean {
+  return row.source !== "not_found" && Boolean(row.name || row.raw_ingredient_text);
+}
+
+/** Exact digits win. The other writing of that same number is used only when the exact row is missing. */
+function pickStoredProduct(rows: StoredProduct[], scanned: string): StoredProduct | null {
+  const exact = rows.find((row) => row.barcode === scanned);
+  const sameNumber = rows.find((row) => row.barcode !== scanned);
+  if (exact && hasCatalogRow(exact)) return exact;
+  if (sameNumber && hasCatalogRow(sameNumber)) return sameNumber;
+  return exact ?? sameNumber ?? null;
+}
 
 function isFresh(syncedAt: string | null): boolean {
   if (!syncedAt) return false;
@@ -54,11 +67,11 @@ function catalogProduct(
 }
 
 export async function GET(request: Request) {
-  const read = normalizeBarcode(new URL(request.url).searchParams.get("barcode") ?? "");
-  if (!read.ok) {
-    return Response.json({ error: read.error }, { status: 400 });
+  const match = matchBarcode(new URL(request.url).searchParams.get("barcode") ?? "");
+  if (!match.ok) {
+    return Response.json({ error: match.error }, { status: 400 });
   }
-  const barcode = read.barcode;
+  const barcode = match.canonical;
 
   const supabase = catalogClient();
   if (!supabase) {
@@ -73,9 +86,7 @@ export async function GET(request: Request) {
     supabase
       .from("products")
       .select("barcode,name,brand,raw_ingredient_text,source,last_synced_at,off_allergen_tags")
-      .in("barcode", barcodeCandidates(barcode))
-      .limit(1)
-      .maybeSingle(),
+      .in("barcode", match.candidates),
     supabase
       .from("prop65_ingredient_terms")
       .select("technical_name, prop65_chemicals(chemical_name)")
@@ -87,7 +98,7 @@ export async function GET(request: Request) {
   }
 
   const { categories, terms } = mapping.catalog;
-  const stored = (storedResult.data ?? null) as StoredProduct | null;
+  const stored = pickStoredProduct((storedResult.data ?? []) as StoredProduct[], match.scanned);
   const fresh = isFresh(stored?.last_synced_at ?? null);
   const disclosures = prop65Result.error
     ? []

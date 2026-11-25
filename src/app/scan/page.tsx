@@ -321,7 +321,7 @@ export default function ScanPage() {
       setMessage("Enter all 12 digits printed under the bars.");
       return;
     }
-    void lookup(read.barcode);
+    void lookup(typed);
   }
 
   const reviewing = phase === "review";
