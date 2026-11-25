@@ -47,7 +47,11 @@ export default function DishesPage() {
                         {dish.name}
                       </span>
                       <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">
-                        {dish.book ? `Recipe in ${dish.book.title}` : dish.serves}
+                        {dish.parts.length > 0
+                          ? dish.serves
+                          : dish.book
+                            ? `Recipe in ${dish.book.title}`
+                            : dish.serves}
                       </span>
                     </span>
                     <CaretRight size={18} className="shrink-0 text-ink-muted" />

@@ -83,7 +83,27 @@ export const DISHES: MenuDish[] = [
       "Serve with a dairy-free spread, maple syrup, or blueberry or apricot jam. Banana slices and extra blueberries sit beside the plate.",
       "A double batch freezes. Reheat in the toaster.",
     ],
-    parts: [],
+    parts: [
+      {
+        title: "Pancakes",
+        ingredients: [
+          "1 1/2 cups all-purpose flour",
+          "2 1/2 tbsp sugar",
+          "3 tsp baking powder",
+          "2/3 cup vanilla soy milk (rice or oat milk works too)",
+          "3/4 cup water",
+          "Egg replacer mix: 2 1/2 tbsp water, 2 1/2 tbsp vegetable oil, and 1 1/2 tsp baking powder, stirred together",
+          "1 cup fresh blueberries, washed and drained",
+        ],
+        steps: [
+          "Put everything except the blueberries in a mixing bowl and stir until smooth.",
+          "Fold in the blueberries.",
+          "Heat a large nonstick skillet over medium-high heat. Pour batter into 4-inch rounds.",
+          "Cook until bubbles form and pop across the top, then flip. Cook until the second side is golden.",
+          "Serve with a dairy-free buttery spread, maple syrup, or blueberry or apricot jam.",
+        ],
+      },
+    ],
   },
   {
     id: "turkey-sausage-oatmeal",
@@ -155,6 +175,24 @@ export const DISHES: MenuDish[] = [
     ],
     parts: [
       {
+        title: "Spinach hummus, about 1 1/2 cups",
+        ingredients: [
+          "1 can (15 oz) chickpeas, drained and rinsed",
+          "1 clove garlic",
+          "1 cup packed fresh spinach",
+          "1 tbsp fresh lemon juice",
+          "1/2 tsp ground cumin",
+          "1 tsp kosher salt",
+          "1/2 tsp black pepper",
+          "1/4 cup extra virgin olive oil",
+        ],
+        steps: [
+          "In a blender or food processor, puree the chickpeas and garlic until smooth.",
+          "Add the spinach, lemon juice, cumin, salt, and pepper. Blend thoroughly.",
+          "With the motor running, pour in the olive oil and process until smooth. Taste and adjust seasoning.",
+        ],
+      },
+      {
         title: "Build the wraps",
         ingredients: [
           "4 large flour tortillas",
@@ -164,7 +202,7 @@ export const DISHES: MenuDish[] = [
           "Optional: 8 oz sliced roasted turkey breast",
         ],
         steps: [
-          "Make the hummus from the cookbook, then spread about 3 tablespoons on each tortilla, leaving an inch at the edge.",
+          "Spread about 3 tablespoons of hummus on each tortilla, leaving an inch at the edge.",
           "Line the vegetables and turkey down the middle.",
           "Fold in the sides, roll tight, and cut in half.",
           "Extra hummus, pretzels, and apple slices or grapes go on the side.",
@@ -190,6 +228,22 @@ export const DISHES: MenuDish[] = [
     ],
     parts: [
       {
+        title: "Sunflower sauce, about 1 cup",
+        ingredients: [
+          "1/2 cup sunflower seed butter, smooth",
+          "1/4 cup warm water",
+          "2 tbsp lime juice",
+          "1 tbsp brown sugar",
+          "1 tbsp tamari or soy sauce",
+          "1 small garlic clove, minced",
+          "Pinch of cayenne, optional",
+        ],
+        steps: [
+          "Whisk the sunflower seed butter and water together, then stir in everything else.",
+          "Chill 20 minutes for a dip, or use right away for noodles.",
+        ],
+      },
+      {
         title: "Bowls",
         ingredients: [
           "8 oz rice noodles or spaghetti",
@@ -197,13 +251,13 @@ export const DISHES: MenuDish[] = [
           "2 cups shredded cabbage or coleslaw mix",
           "1 cup shredded carrots",
           "1 cup shelled edamame, or 2 cups leftover cooked turkey",
-          "Sunflower seed butter sauce, thinned with 1/2 cup vegetable broth",
+          "1/2 cup vegetable broth",
           "Toppings: cucumber, green onion, cilantro, lime",
         ],
         steps: [
           "Cook the noodles, drain, and rinse with warm water.",
           "Stir-fry the cabbage, carrots, and edamame or turkey in the oil for 3 to 4 minutes.",
-          "Toss the noodles with the sauce until coated and hot.",
+          "Whisk the vegetable broth into the sauce to thin it. Toss the noodles with the sauce until coated and hot.",
           "Top with cucumber, green onion, cilantro, and lime.",
         ],
       },
@@ -227,6 +281,23 @@ export const DISHES: MenuDish[] = [
       "Leftover slices make a next-day sandwich.",
     ],
     parts: [
+      {
+        title: "Meatloaf",
+        ingredients: [
+          "1/4 cup apricot jam",
+          "1/4 cup bottled chili sauce (check the label)",
+          "1/2 tsp bottled minced garlic",
+          "1/2 cup fine dry breadcrumbs, free of milk, egg, and nuts (or 1/2 cup quick oats)",
+          "1 tbsp dried onion flakes",
+          "1 lb extra lean ground turkey",
+        ],
+        steps: [
+          "Heat the oven to 350°F. Lightly grease an 8 x 8 inch baking dish with vegetable oil or dairy-free cooking spray.",
+          "In a large bowl, mix the jam, chili sauce, and garlic. Stir in the breadcrumbs and onion flakes.",
+          "Add the turkey and mix until well blended. Shape into a loaf in the dish.",
+          "Bake uncovered 50 minutes, until it reaches 165°F in the center. Rest 5 minutes before slicing.",
+        ],
+      },
       {
         title: "Roasted potatoes and green beans",
         ingredients: [
@@ -295,7 +366,49 @@ export const DISHES: MenuDish[] = [
       "Decorate with dairy-free chocolate chips, blueberries, and raspberries. No strawberries.",
       "Check candles, sprinkles, and store-bought decorations. Pink and red pieces can be strawberry flavored, and candy melts often contain milk.",
     ],
-    parts: [],
+    parts: [
+      {
+        title: "Cake",
+        ingredients: [
+          "3 cups all-purpose flour",
+          "2 cups sugar",
+          "1/2 cup dairy-free 100% cocoa powder",
+          "2 tsp baking soda",
+          "1 tsp salt",
+          "2 cups water",
+          "2/3 cup vegetable oil",
+          "2 tbsp distilled white vinegar",
+          "2 tsp vanilla extract",
+        ],
+        steps: [
+          "Heat the oven to 350°F. Grease two 9-inch round pans with 100% vegetable shortening, then dust with flour.",
+          "In a large bowl, combine the flour, sugar, cocoa, baking soda, and salt.",
+          "Add the water, oil, vinegar, and vanilla. Beat with a spoon or whisk just until smooth and blended.",
+          "Pour into the pans. Bake 35 minutes, or until a toothpick in the center comes out clean.",
+          "Cool in the pans 10 minutes, then turn out onto wire racks and cool completely before frosting.",
+        ],
+      },
+      {
+        title: "Chocolate frosting, about 2 1/2 cups",
+        ingredients: [
+          "1/2 cup (1 stick) dairy-free buttery stick, at room temperature",
+          "2 1/2 tbsp honey",
+          "1 tsp vanilla extract",
+          "1/2 cup dairy-free 100% cocoa powder",
+          "2 1/2 tbsp water",
+          "2 1/2 cups powdered sugar",
+          "Dairy-free chocolate chips for decorating",
+        ],
+        steps: [
+          "Put the buttery stick, honey, and vanilla in a mixing bowl. Sift in the cocoa.",
+          "Beat on low speed until creamed together.",
+          "Add the water and sift in the powdered sugar. Beat on medium speed until smooth.",
+          "Place one layer upside down on a serving plate. Spread frosting over the top.",
+          "Set the second layer on top, right side up. Frost the top and sides.",
+          "Press chocolate chips around the bottom edge or scatter them on top. Add blueberries and raspberries for color.",
+        ],
+      },
+    ],
   },
 ];
 
