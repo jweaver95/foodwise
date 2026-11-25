@@ -36,7 +36,7 @@ export default function DishPage() {
         <p className="mt-3 text-[15px] leading-relaxed text-ink-muted">{dish.summary}</p>
         <p className="mt-2 text-[13px] text-ink-muted">{dish.serves}</p>
 
-        {dish.book ? (
+        {dish.book && dish.parts.length === 0 ? (
           <div className="mt-5 rounded-[28px] bg-forest px-4 py-5 text-white shadow-[0_16px_32px_rgb(22_63_48/0.22)]">
             <p className="text-[18px] font-semibold tracking-[-0.01em]">Full recipe</p>
             <div className="mt-4 rounded-[20px] bg-paper px-4 py-3.5 text-ink">
@@ -72,6 +72,17 @@ export default function DishPage() {
             </ol>
           </section>
         ))}
+
+        {dish.book && dish.parts.length > 0 ? (
+          <p className="mt-7 text-[13px] leading-relaxed text-ink-muted">
+            From {dish.book.title}
+            {dish.book.where ? ` — ${dish.book.where}` : ""}.{" "}
+            <Link href="/resources" className="font-semibold text-forest underline-offset-2 hover:underline">
+              See the cookbooks
+            </Link>
+            .
+          </p>
+        ) : null}
 
         <section className="mt-7">
           <h2 className="text-[18px] font-semibold tracking-[-0.01em]">Gluten-free option</h2>
