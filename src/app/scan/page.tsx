@@ -5,10 +5,17 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "reac
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser";
 import { Barcode, ImageSquare, X } from "@phosphor-icons/react/dist/ssr";
 import { ProductPhoto } from "@/components/ProductPhoto";
-import { Button, Screen } from "@/components/ui";
+import { Button, ButtonLink, Screen } from "@/components/ui";
 import { useHousehold } from "@/context/HouseholdContext";
 import { normalizeBarcode } from "@/lib/barcode";
 import { PRODUCTS, SAMPLE_SCAN_ORDER } from "@/lib/data";
+import {
+  DEMO_SCAN_LIMIT,
+  demoScanLimitApplies,
+  getDemoDbScanCount,
+  isDemoDbScanLimitReached,
+  recordDemoDbScan,
+} from "@/lib/demoScanLimit";
 import { panelReadingQuality } from "@/lib/panelText";
 import { rememberProduct } from "@/lib/productCache";
 import { readIngredientPanel } from "@/lib/readPanel";
@@ -38,7 +45,7 @@ function cameraErrorMessage(): string {
 
 export default function ScanPage() {
   const router = useRouter();
-  const { selectedMember } = useHousehold();
+  const { selectedMember, source, hydrated } = useHousehold();
   const [mode, setMode] = useState<Mode>("barcode");
   const [phase, setPhase] = useState<Phase>("idle");
   const [picking, setPicking] = useState(false);
@@ -49,6 +56,8 @@ export default function ScanPage() {
   const [uncertain, setUncertain] = useState(false);
   const [typeIn, setTypeIn] = useState(false);
   const [typed, setTyped] = useState("");
+  const [demoGate, setDemoGate] = useState(false);
+  const [demoUsed, setDemoUsed] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoNode, setVideoNode] = useState<HTMLVideoElement | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -66,7 +75,37 @@ export default function ScanPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!demoScanLimitApplies(source)) {
+      setDemoGate(false);
+      return;
+    }
+    const used = getDemoDbScanCount();
+    setDemoUsed(used);
+    setDemoGate(used >= DEMO_SCAN_LIMIT);
+  }, [hydrated, source]);
+
+  const enforceDemoGate = useCallback(() => {
+    if (!demoScanLimitApplies(source)) return false;
+    if (!isDemoDbScanLimitReached()) return false;
+    setDemoGate(true);
+    setDemoUsed(getDemoDbScanCount());
+    setPhase("idle");
+    setPicking(false);
+    setMessage(null);
+    return true;
+  }, [source]);
+
+  const noteDemoDbHit = useCallback(() => {
+    if (!demoScanLimitApplies(source)) return;
+    const used = recordDemoDbScan();
+    setDemoUsed(used);
+    if (used >= DEMO_SCAN_LIMIT) setDemoGate(true);
+  }, [source]);
+
   const lookup = useCallback(async (barcode: string) => {
+    if (enforceDemoGate()) return;
     setPhase("reading");
     setMessage(null);
     try {
@@ -78,6 +117,7 @@ export default function ScanPage() {
         setPhase("live");
         return;
       }
+      noteDemoDbHit();
       rememberProduct(body.product);
       router.push(`/verdict/${body.product.id}`);
     } catch {
@@ -85,9 +125,10 @@ export default function ScanPage() {
       setMessage("The lookup failed. Check the connection and try again.");
       setPhase("live");
     }
-  }, [router]);
+  }, [enforceDemoGate, noteDemoDbHit, router]);
 
   useEffect(() => {
+    if (demoGate) return;
     if (mode !== "barcode" || phase !== "live" || !videoNode) return;
     const video = videoNode;
 
@@ -162,16 +203,16 @@ export default function ScanPage() {
         video.srcObject = null;
       }
     };
-  }, [mode, phase, lookup, videoNode]);
+  }, [demoGate, mode, phase, lookup, videoNode]);
 
   useEffect(() => {
-    if (mode !== "barcode" || phase !== "live" || typeIn) return;
+    if (demoGate || mode !== "barcode" || phase !== "live" || typeIn) return;
     const timer = window.setTimeout(() => setTypeIn(true), TYPE_IN_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [mode, phase, typeIn]);
+  }, [demoGate, mode, phase, typeIn]);
 
   useEffect(() => {
-    if (mode !== "ocr" || phase !== "live" || !videoNode) return;
+    if (demoGate || mode !== "ocr" || phase !== "live" || !videoNode) return;
     const video = videoNode;
 
     let cancelled = false;
@@ -199,7 +240,7 @@ export default function ScanPage() {
       stream?.getTracks().forEach((track) => track.stop());
       video.srcObject = null;
     };
-  }, [mode, phase, videoNode]);
+  }, [demoGate, mode, phase, videoNode]);
 
   const recognize = useCallback(async (image: string) => {
     try {
@@ -223,6 +264,7 @@ export default function ScanPage() {
   }, [cameraBlocked]);
 
   function capturePanel() {
+    if (enforceDemoGate()) return;
     const video = videoRef.current;
     const image = video ? captureFrame(video, 1600, 0.92) : null;
     if (!image) {
@@ -236,6 +278,7 @@ export default function ScanPage() {
   }
 
   async function confirmPanel() {
+    if (enforceDemoGate()) return;
     setPhase("reading");
     setMessage(null);
     try {
@@ -251,6 +294,7 @@ export default function ScanPage() {
         setPhase("review");
         return;
       }
+      noteDemoDbHit();
       const image = shot ? await shrinkDataUrl(shot) : body.product.image;
       rememberProduct({ ...body.product, image });
       router.push(`/verdict/${body.product.id}`);
@@ -265,6 +309,7 @@ export default function ScanPage() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    if (enforceDemoGate()) return;
     setMessage(null);
     setPicking(false);
 
@@ -300,6 +345,7 @@ export default function ScanPage() {
   }
 
   function selectMode(next: Mode) {
+    if (demoGate) return;
     setMode(next);
     setPhase("idle");
     setPicking(false);
@@ -312,6 +358,7 @@ export default function ScanPage() {
   }
 
   function submitTypedBarcode() {
+    if (enforceDemoGate()) return;
     if (typed.length < 12) {
       setMessage("Enter all 12 digits.");
       return;
@@ -348,7 +395,19 @@ export default function ScanPage() {
           </header>
 
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-6">
-            {reviewing ? (
+            {demoGate ? (
+              <div className="w-full max-w-[34ch] text-center">
+                <p className="text-[20px] font-semibold tracking-[-0.02em] text-white">
+                  Demo scans used up
+                </p>
+                <p className="mt-3 text-[14px] leading-relaxed text-white/65">
+                  The sample household includes {DEMO_SCAN_LIMIT} live product
+                  lookups against the catalog. You have used {demoUsed} of{" "}
+                  {DEMO_SCAN_LIMIT}. Create an account to keep scanning with your
+                  own profiles.
+                </p>
+              </div>
+            ) : reviewing ? (
               <div className="w-full">
                 {shot ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -436,7 +495,22 @@ export default function ScanPage() {
           </div>
 
           <div className="shrink-0 px-5 pb-6">
-            {reviewing ? null : (
+            {demoGate ? (
+              <div className="space-y-3">
+                <ButtonLink href="/account" tone="light">
+                  Create an account
+                </ButtonLink>
+                <button
+                  type="button"
+                  onClick={() => router.push("/home")}
+                  className="w-full py-2 text-center text-[14px] font-medium text-white/70"
+                >
+                  Back to home
+                </button>
+              </div>
+            ) : null}
+
+            {demoGate || reviewing ? null : (
               <div className="mb-4 flex rounded-full bg-white/10 p-1">
                 {(
                   [
@@ -471,7 +545,7 @@ export default function ScanPage() {
               onChange={(event) => void onPhoto(event)}
             />
 
-            {picking ? (
+            {demoGate ? null : picking ? (
               <div className="max-h-[280px] space-y-2 overflow-y-auto">
                 <p className="px-1 pb-1 text-[13px] font-medium text-white/55">
                   Pick a sample from the aisle
@@ -568,6 +642,7 @@ export default function ScanPage() {
                     tone="light"
                     disabled={phase === "live" || reading}
                     onClick={() => {
+                      if (enforceDemoGate()) return;
                       setPicking(false);
                       setMessage(null);
                       setPhase("live");
@@ -580,6 +655,7 @@ export default function ScanPage() {
                     tone="light"
                     disabled={reading}
                     onClick={() => {
+                      if (enforceDemoGate()) return;
                       setPicking(false);
                       setMessage(null);
                       if (phase === "live") capturePanel();
